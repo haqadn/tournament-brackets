@@ -27,8 +27,13 @@ Class Gaming_Tournament {
 		add_action('init', [$this, 'register_taxonomies']);
 		add_action('add_meta_boxes_tournament', [$this, 'add_tournament_meta_boxes']);
 		add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
+		add_action('wp_enqueue_scripts', [$this, 'enqueue_front_end_scripts']);
 		add_action('wp_ajax_autocomplete-username', [$this, 'autocomplete_username']);
 		add_action('save_post', [$this, 'update_tournament_meta']);
+
+
+		add_filter('the_content', [$this, 'modify_tournament_page']);
+
 	}
 
 	/**
@@ -241,6 +246,21 @@ Class Gaming_Tournament {
 	}
 
 	/**
+	 * Enqueue scripts in front-end.
+	 */
+	public function enqueue_front_end_scripts(){
+
+		wp_enqueue_style( 'jquery-modal', plugins_url( 'css/jquery.modal.min.css', __FILE__ ), [], '0.7.0' );
+		wp_enqueue_script( 'jquery-modal', plugins_url( 'js/jquery.modal.min.js', __FILE__ ), ['jquery'], '0.7.0' );
+
+		wp_enqueue_script( 'jquery-countdown', plugins_url( 'js/jquery.countdown.min.js', __FILE__ ), ['jquery'], '0.7.0' );
+
+		wp_enqueue_script( 'gaming-tournament', plugins_url( 'js/plugin.js', __FILE__ ), ['jquery', 'jquery-modal', 'jquery-countdown'] );
+		wp_enqueue_style( 'gaming-tournament', plugins_url( 'css/plugin.css', __FILE__ ) );
+
+	}
+
+	/**
 	 * Return json array of usernames to autocomplete.
 	 */
 	public function autocomplete_username(){
@@ -272,6 +292,26 @@ Class Gaming_Tournament {
 		/**
 		 Update cron jobs
 		 */
+
+	}
+
+	/**
+	 * Modify the tournament page to inject plugin codes.
+	 *
+	 * @var string $help_text Content given in wp_editor as help text.
+	 */
+	public function modify_tournament_page( $help_text ){
+
+		ob_start();
+		?>
+			<div class="tournament-status">
+				
+				<p class="text-center">Some text to define what happens after countdown.</p>
+				<div class="countdown" data-end-time="2016/06/21 14:27:28 +0600"></div>
+
+			</div>
+		<?php
+		return ob_get_clean();
 
 	}
 }

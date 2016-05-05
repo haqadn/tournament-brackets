@@ -9,3 +9,12 @@
 #tournament-settings .rounds th {
 	padding: 15px 10px;
 }
+
+.countdown > div {
+    display: inline-block;
+    margin-right: 50px;
+}
+
+.countdown .counter {
+    margin-right: 10px;
+}
