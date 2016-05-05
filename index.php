@@ -142,6 +142,7 @@ Class Gaming_Tournament {
 
 				// Existing data
 				$tournament_registration = get_post_meta( $post->ID, '_tournament_setting_registration', true );
+				$registration_deadline   = get_post_meta( $post->ID, '_tournament_setting_registration_deadline', true );
 				$rounds                  = (array) get_post_meta( $post->ID, '_tournament_setting_rounds', true );
 				?>
 				<table class="form-table">
@@ -157,6 +158,16 @@ Class Gaming_Tournament {
 									<input type="radio" name="tournament_settings[registration]" value="private" <?php echo 'private' == $tournament_registration ? 'checked="checked"' : '';?>> 
 									<?php _e( 'Private', 'gt' ); ?>
 								</label>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">
+								<label for="tournament-settings-deadline">
+									<?php _e( 'Registration Deadline', 'gt' ); ?>
+								</label>
+							</th>
+							<td>
+								<input type="text" name="tournament_settings[registration_deadline]" value="<?php echo $registration_deadline;?>" id="tournament-settings-deadline" class="regular-text time-date-picker">
 							</td>
 						</tr>
 						<tr>
@@ -286,6 +297,8 @@ Class Gaming_Tournament {
 		$ts = $_POST['tournament_settings'];
 		if( !wp_verify_nonce( $ts['nonce'], 'tournament_settings' ) ) return;
 
+		if( '' != trim( $ts['registration_deadline'] ) ) update_post_meta( $post_id, '_tournament_setting_registration_deadline', $ts['registration_deadline'] );
+
 		if( in_array( $ts['registration'], ['public', 'private'] ) ) update_post_meta( $post_id, '_tournament_setting_registration', $ts['registration'] );
 
 		if( is_array( $ts['rounds'] ) ) update_post_meta( $post_id, '_tournament_setting_rounds', $ts['rounds'] );
@@ -302,6 +315,11 @@ Class Gaming_Tournament {
 	 */
 	public function modify_tournament_page( $help_text ){
 
+		global $post;
+
+		$registration_deadline = strtotime( get_post_meta( $post->ID, '_tournament_setting_registration_deadline', true ) );
+		
+
 		ob_start();
 		?>
 			<div class="tournament-status">
@@ -311,6 +329,7 @@ Class Gaming_Tournament {
 
 			</div>
 		<?php
+
 		return ob_get_clean();
 
 	}
