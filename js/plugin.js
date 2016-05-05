@@ -4,7 +4,7 @@
 		$('.time-date-picker').datetimepicker({
 			controlType: 'select',
 			dateFormat: 'yy-mm-dd',
-			timeFormat: 'hh:mm tt'
+			timeFormat: 'HH:mm:ss z'
 		});
 
 		if( typeof $.fn.countdown != 'undefined' )
