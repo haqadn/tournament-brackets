@@ -137,7 +137,6 @@ Class Gaming_Tournament {
 
 				// Existing data
 				$tournament_registration = get_post_meta( $post->ID, '_tournament_setting_registration', true );
-				$players                 = (array) get_post_meta( $post->ID, '_tournament_setting_players', true );
 				$rounds                  = (array) get_post_meta( $post->ID, '_tournament_setting_rounds', true );
 				?>
 				<table class="form-table">
@@ -153,18 +152,6 @@ Class Gaming_Tournament {
 									<input type="radio" name="tournament_settings[registration]" value="private" <?php echo 'private' == $tournament_registration ? 'checked="checked"' : '';?>> 
 									<?php _e( 'Private', 'gt' ); ?>
 								</label>
-							</td>
-						</tr>
-						<tr>
-							<th scope="row">
-								<label><?php _e( 'Players', 'gt' ); ?></label>
-							</th>
-							<td>
-								<ul id="tournament-players">
-									<?php foreach( $players as $player ): ?>
-										<?php echo "<li>$player</li>"; ?>
-									<?php endforeach; ?>
-								</ul>
 							</td>
 						</tr>
 						<tr>
@@ -248,11 +235,8 @@ Class Gaming_Tournament {
 		wp_enqueue_style( 'jquery-timepicker-addon', plugins_url( 'css/jquery-ui-timepicker-addon.css', __FILE__ ), [], '1.6.3' );
 		wp_enqueue_script( 'jquery-timepicker-addon', plugins_url( 'js/jquery-ui-timepicker-addon.js', __FILE__ ), ['jquery', 'jquery-ui-datepicker', 'jquery-ui-slider'], '1.6.3');
 
-		wp_enqueue_style( 'tag-it', plugins_url( 'css/jquery.tagit.css', __FILE__ ), ['jquery-ui'], '2.0' );
-		wp_enqueue_script( 'tag-it', plugins_url( 'js/tag-it.min.js', __FILE__ ), ['jquery', 'jquery-ui-core', 'jquery-ui-dialog'], '2.0' );
-
-		wp_enqueue_script( 'gaming-tournament', plugins_url( 'js/plugin.js', __FILE__ ), ['jquery', 'tag-it', 'jquery-ui-datepicker', 'jquery-timepicker-addon'] );
-		wp_enqueue_style( 'gaming-tournament', plugins_url( 'css/plugin.css', __FILE__ ), ['tag-it']);
+		wp_enqueue_script( 'gaming-tournament', plugins_url( 'js/plugin.js', __FILE__ ), ['jquery', 'jquery-ui-datepicker', 'jquery-timepicker-addon'] );
+		wp_enqueue_style( 'gaming-tournament', plugins_url( 'css/plugin.css', __FILE__ ) );
 
 	}
 
@@ -284,13 +268,10 @@ Class Gaming_Tournament {
 
 		if( in_array( $ts['registration'], ['public', 'private'] ) ) update_post_meta( $post_id, '_tournament_setting_registration', $ts['registration'] );
 
-		if( is_array( $ts['players'] ) ) update_post_meta( $post_id, '_tournament_setting_players', $ts['players'] );
-
-		/**
-			Implement logic to store in the database table
-		*/
-
 		if( is_array( $ts['rounds'] ) ) update_post_meta( $post_id, '_tournament_setting_rounds', $ts['rounds'] );
+		/**
+		 Update cron jobs
+		 */
 
 	}
 }
