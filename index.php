@@ -301,10 +301,59 @@ Class Gaming_Tournament {
 
 		if( in_array( $ts['registration'], ['public', 'private'] ) ) update_post_meta( $post_id, '_tournament_setting_registration', $ts['registration'] );
 
-		if( is_array( $ts['rounds'] ) ) update_post_meta( $post_id, '_tournament_setting_rounds', $ts['rounds'] );
+		if( is_array( $ts['rounds'] ) ){
+			$count = 0;
+			foreach( $ts['rounds'] as $round ){
+				if( '' == trim( $round['points'] ) || '' == trim( $round['end_date'] ) ) break;
+
+				$count++;
+			}
+
+			$ts['rounds']['count'] = $count;
+
+			update_post_meta( $post_id, '_tournament_setting_rounds', $ts['rounds'] );
+		}
 		/**
 		 Update cron jobs
 		 */
+
+	}
+
+	/**
+	 * Get information of a tournament.
+	 * 
+	 * @var int $tournament_id ID of the tournament.
+	 */
+	public static function get_tournament_info( $tournament_id ){
+
+		$round_labels = [
+			__( "First Round", "gt" ),
+			__( "Round of 32", "gt" ),
+			__( "Round of 16", "gt" ),
+			__( "Quarter Final", "gt" ),
+			__( "Semi Final", "gt" ),
+			__( "Final", "gt" )
+		];
+
+		$tournament_registration = get_post_meta( $tournament_id, '_tournament_setting_registration', true );
+		$registration_deadline   = get_post_meta( $tournament_id, '_tournament_setting_registration_deadline', true );
+		$rounds                  = (array) get_post_meta( $tournament_id, '_tournament_setting_rounds', true );
+
+		for( $i = 6 - $rounds['count'], $r = 1; $r <= $rounds['count']; $i++, $r++ ){
+			$rounds[$r]['label'] = $round_labels[$i];
+			$rounds[$r]['end_date'] = strtotime( $rounds[$r]['end_date'] );
+
+			$current_round = 0;
+			if( $rounds[$r]['end_date'] > time() )
+				$current_round = $r;
+		}
+
+		return [
+			'rounds' => $rounds,
+			'registration_deadline' => strtotime( $registration_deadline ),
+			'public_registration' => 'public' == $tournament_registration,
+			'current_round' => $current_round
+		];
 
 	}
 
@@ -318,7 +367,9 @@ Class Gaming_Tournament {
 		global $post;
 
 		$registration_deadline = strtotime( get_post_meta( $post->ID, '_tournament_setting_registration_deadline', true ) );
-		
+
+
+
 
 		ob_start();
 		?>
