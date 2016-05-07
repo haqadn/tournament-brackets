@@ -338,9 +338,10 @@ Class Gaming_Tournament {
 		$tournament_registration = get_post_meta( $tournament_id, '_tournament_setting_registration', true );
 		$registration_deadline   = get_post_meta( $tournament_id, '_tournament_setting_registration_deadline', true );
 		$rounds                  = (array) get_post_meta( $tournament_id, '_tournament_setting_rounds', true );
+		$matches                 = (array) get_post_meta( $tournament_id, '_tournament_setting_matches', true );
 
 		for( $i = 6 - $rounds['count'], $r = 1; $r <= $rounds['count']; $i++, $r++ ){
-			$rounds[$r]['label'] = $round_labels[$i];
+			$rounds[$r]['label'] = 1 === $r ? $round_labels[0] : $round_labels[$i];
 			$rounds[$r]['end_date'] = strtotime( $rounds[$r]['end_date'] );
 
 			$current_round = 0;
@@ -365,24 +366,135 @@ Class Gaming_Tournament {
 	public function modify_tournament_page( $help_text ){
 
 		global $post;
+		ob_start();
+
 
 		$registration_deadline = strtotime( get_post_meta( $post->ID, '_tournament_setting_registration_deadline', true ) );
 
-
-
-
-		ob_start();
-		?>
+		if( time() < $registration_deadline ){
+			?>
 			<div class="tournament-status">
 				
-				<p class="text-center">Some text to define what happens after countdown.</p>
-				<div class="countdown" data-end-time="2016/06/21 14:27:28 +0600"></div>
+				<p class="text-center"><?php _e( 'Registration ends in:', 'gt' ); ?></p>
+				<div class="countdown" data-end-time="<?php echo date( 'Y-m-d H:i:s O', $registration_deadline ); ?>"></div>
 
 			</div>
+			<?php
+		}
+		else {
+			self::show_brackets( $post->ID );
+		}
+		?>
+			
 		<?php
 
 		return ob_get_clean();
 
+	}
+
+	/**
+	 * Show brackets of a tournament.
+	 *
+	 * @var int $tid ID of the tournament post.
+	 */
+	public static function show_brackets( $tid ){
+
+		$t_info = self::get_tournament_info( $tid );
+
+		?>
+
+		<div class="brackets_container">
+			
+			<table class="t_of_<?php echo pow(2, $t_info['rounds']['count']);?>">
+				<thead>
+					<tr>
+						<?php for( $i = 1; $i <= $t_info['rounds']['count']; $i++ ): ?>
+						<th>
+							<span><?php echo $t_info['rounds'][$i]['label']; ?></span>
+						</th>
+						<?php endfor; ?>
+						<?php for( $i = $t_info['rounds']['count'] - 1; $i >= 1; $i-- ): ?>
+						<th>
+							<span><?php echo $t_info['rounds'][$i]['label']; ?></span>
+						</th>
+						<?php endfor; ?>
+					</tr>
+				</thead>
+				<tbody>
+					<tr class="playground">
+						<?php for( $i = 1; $i <= $t_info['rounds']['count']; $i++ ): ?>
+						<td class="round_column r_<?php echo pow(2, $i);?>">
+							<?php for( $j = 0; $j < pow( 2, $t_info['rounds']['count'] - ($i - 1) )/2; $j += 2): ?>
+							<div class="mtch_container">
+								<div class="match_unit">
+									<!--Match unite consist of top(.m_top) and bottom(.m_botm) teams with class (.winner) or (.loser) added-->
+									<div class="m_segment m_top winner" data-team-id="9">
+										<span>
+											<a href="#">
+												<!-- <img src="imgs/flags/Brazil.png" alt="Brazil"/> -->
+												<span>Brazil</span>
+											</a>
+											<strong>4</strong>
+										</span>
+									</div>
+									<div class="m_segment m_botm loser" data-team-id="10">
+										<span>
+											<a href="#">
+												<!-- <img src="imgs/flags/Canada.png" alt="Canada"/> -->
+												<span>Canada</span>
+											</a>
+											<strong>2</strong>
+										</span>
+									</div>
+									<div class="m_dtls">
+										<!--Match date and time-->
+										<span></span>
+									</div>
+								</div>
+							</div>
+							<?php endfor; ?>
+						</td>
+						<?php endfor; ?>
+						<?php for( $i = $t_info['rounds']['count'] - 1; $i >= 1; $i-- ): ?>
+						<td class="round_column r_<?php echo pow(2, $i);?>">
+							<?php for( $j = 0; $j < pow( 2, $t_info['rounds']['count'] - ($i - 1) )/2; $j += 2): ?>
+							<div class="mtch_container">
+								<div class="match_unit">
+									<!--Match unite consist of top(.m_top) and bottom(.m_botm) teams with class (.winner) or (.loser) added-->
+									<div class="m_segment m_top winner" data-team-id="9">
+										<span>
+											<a href="#">
+												<!-- <img src="imgs/flags/Brazil.png" alt="Brazil"/> -->
+												<span>Brazil</span>
+											</a>
+											<strong>4</strong>
+										</span>
+									</div>
+									<div class="m_segment m_botm loser" data-team-id="10">
+										<span>
+											<a href="#">
+												<!-- <img src="imgs/flags/Canada.png" alt="Canada"/> -->
+												<span>Canada</span>
+											</a>
+											<strong>2</strong>
+										</span>
+									</div>
+									<div class="m_dtls">
+										<!--Match date and time-->
+										<span></span>
+									</div>
+								</div>
+							</div>
+							<?php endfor; ?>
+						</td>
+						<?php endfor; ?>
+					</tr>
+				</tbody>
+			</table>
+
+		</div>
+
+		<?php
 	}
 }
 new Gaming_Tournament;
