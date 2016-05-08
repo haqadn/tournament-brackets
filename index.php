@@ -423,7 +423,7 @@ Class Gaming_Tournament {
 				<tbody>
 					<tr class="playground">
 						<?php for( $i = 1; $i <= $t_info['rounds']['count']; $i++ ): ?>
-						<td class="round_column r_<?php echo pow(2, $i);?>">
+						<td class="round_column r_<?php echo pow( 2, $t_info['rounds']['count'] - ($i - 1) );?>">
 							<?php for( $j = 0; $j < pow( 2, $t_info['rounds']['count'] - ($i - 1) )/2; $j += 2): ?>
 							<div class="mtch_container">
 								<div class="match_unit">
@@ -456,7 +456,7 @@ Class Gaming_Tournament {
 						</td>
 						<?php endfor; ?>
 						<?php for( $i = $t_info['rounds']['count'] - 1; $i >= 1; $i-- ): ?>
-						<td class="round_column r_<?php echo pow(2, $i);?>">
+						<td class="round_column r_<?php echo pow( 2, $t_info['rounds']['count'] - ($i - 1) );?> reversed">
 							<?php for( $j = 0; $j < pow( 2, $t_info['rounds']['count'] - ($i - 1) )/2; $j += 2): ?>
 							<div class="mtch_container">
 								<div class="match_unit">
