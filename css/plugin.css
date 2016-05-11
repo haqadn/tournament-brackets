@@ -39,6 +39,10 @@
   text-align: center;
 }
 
+.hidden {
+  display: none;
+}
+
 /*brackets style
 ------------------------------*/
 .brackets_container * {
