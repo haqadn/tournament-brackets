@@ -15,6 +15,10 @@
     margin-right: 50px;
 }
 
+.countdown > div:last-child {
+  margin-right: 0;
+}
+
 .countdown .counter {
     margin-right: 10px;
 }
@@ -29,6 +33,10 @@
 
 .mtch_container {
 	min-width: 150px;
+}
+
+.text-center {
+  text-align: center;
 }
 
 /*brackets style

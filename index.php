@@ -366,17 +366,25 @@ Class Gaming_Tournament {
 	public function modify_tournament_page( $help_text ){
 
 		global $post;
+
+		if( 'tournament' != $post->post_type ) return $help_text; // Not a tournament page.
+
 		ob_start();
 
+		$r_info = self::get_tournament_info( $post->ID );
 
-		$registration_deadline = strtotime( get_post_meta( $post->ID, '_tournament_setting_registration_deadline', true ) );
+		$registration_deadline = $r_info['registration_deadline'];
 
-		if( time() < $registration_deadline ){
+		if( time() < $r_info['registration_deadline'] ){
 			?>
 			<div class="tournament-status">
 				
 				<p class="text-center"><?php _e( 'Registration ends in:', 'gt' ); ?></p>
-				<div class="countdown" data-end-time="<?php echo date( 'Y-m-d H:i:s O', $registration_deadline ); ?>"></div>
+				<div class="countdown text-center" data-end-time="<?php echo date( 'Y-m-d H:i:s O', $r_info['registration_deadline'] ); ?>"></div>
+				<br>
+				<p class="text-center">
+					<button class="register" onClick="showRegistrationForm()"><?php _e( 'Register', 'gt' ); ?></button>
+				</p>
 
 			</div>
 			<?php
