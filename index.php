@@ -295,6 +295,8 @@ Class Gaming_Tournament {
 		if( !isset( $_POST['tournament_settings'] ) ) return;
 
 		$ts = $_POST['tournament_settings'];
+		$old_rounds = (array) get_post_meta( $post_id, '_tournament_setting_rounds', true );
+
 		if( !wp_verify_nonce( $ts['nonce'], 'tournament_settings' ) ) return;
 
 		if( '' != trim( $ts['registration_deadline'] ) ) update_post_meta( $post_id, '_tournament_setting_registration_deadline', $ts['registration_deadline'] );
@@ -307,6 +309,15 @@ Class Gaming_Tournament {
 				if( '' == trim( $round['points'] ) || '' == trim( $round['end_date'] ) ) break;
 
 				$count++;
+			}
+
+			for( $i = 1; $i <= $count; $i++ ){
+				if( !isset( $old_rounds[$i] ) ){
+					$ts['rounds'][$i]['matches'] = array_fill( 0, pow(2, $count-$i), [ 'p1' => [], 'p2' => [] ] );
+				}
+				else {
+					$ts['rounds'][$i]['matches'] = $old_settings['rounds'][$i]['matches'];
+				}
 			}
 
 			$ts['rounds']['count'] = $count;
@@ -344,7 +355,7 @@ Class Gaming_Tournament {
 			$rounds[$r]['label'] = 1 === $r ? $round_labels[0] : $round_labels[$i];
 			$rounds[$r]['end_date'] = strtotime( $rounds[$r]['end_date'] );
 
-			$current_round = 0;
+			$current_round = -1;
 			if( $rounds[$r]['end_date'] > time() )
 				$current_round = $r;
 		}
@@ -353,7 +364,7 @@ Class Gaming_Tournament {
 			'rounds' => $rounds,
 			'registration_deadline' => strtotime( $registration_deadline ),
 			'public_registration' => 'public' == $tournament_registration,
-			'current_round' => $current_round
+			'current_round' => strtotime( $registration_deadline ) > time() ? 0 : $current_round
 		];
 
 	}
@@ -425,83 +436,82 @@ Class Gaming_Tournament {
 						<th>
 							<span><?php echo $t_info['rounds'][$i]['label']; ?></span>
 						</th>
-						<?php endfor; ?>
+						<?php endfor; ?>ß
 					</tr>
 				</thead>
 				<tbody>
 					<tr class="playground">
-						<?php for( $i = 1; $i <= $t_info['rounds']['count']; $i++ ): ?>
-						<td class="round_column r_<?php echo pow( 2, $t_info['rounds']['count'] - ($i - 1) );?>">
-							<?php for( $j = 0; $j < pow( 2, $t_info['rounds']['count'] - ($i - 1) )/2; $j += 2): ?>
-							<div class="mtch_container">
-								<div class="match_unit">
-									<!--Match unite consist of top(.m_top) and bottom(.m_botm) teams with class (.winner) or (.loser) added-->
-									<div class="m_segment m_top winner" data-team-id="9">
-										<span>
-											<a href="#">
-												<!-- <img src="imgs/flags/Brazil.png" alt="Brazil"/> -->
-												<span>Brazil</span>
-											</a>
-											<strong>4</strong>
-										</span>
-									</div>
-									<div class="m_segment m_botm loser" data-team-id="10">
-										<span>
-											<a href="#">
-												<!-- <img src="imgs/flags/Canada.png" alt="Canada"/> -->
-												<span>Canada</span>
-											</a>
-											<strong>2</strong>
-										</span>
-									</div>
-									<div class="m_dtls">
-										<!--Match date and time-->
-										<span></span>
-									</div>
-								</div>
-							</div>
-							<?php endfor; ?>
-						</td>
-						<?php endfor; ?>
-						<?php for( $i = $t_info['rounds']['count'] - 1; $i >= 1; $i-- ): ?>
-						<td class="round_column r_<?php echo pow( 2, $t_info['rounds']['count'] - ($i - 1) );?> reversed">
-							<?php for( $j = 0; $j < pow( 2, $t_info['rounds']['count'] - ($i - 1) )/2; $j += 2): ?>
-							<div class="mtch_container">
-								<div class="match_unit">
-									<!--Match unite consist of top(.m_top) and bottom(.m_botm) teams with class (.winner) or (.loser) added-->
-									<div class="m_segment m_top winner" data-team-id="9">
-										<span>
-											<a href="#">
-												<!-- <img src="imgs/flags/Brazil.png" alt="Brazil"/> -->
-												<span>Brazil</span>
-											</a>
-											<strong>4</strong>
-										</span>
-									</div>
-									<div class="m_segment m_botm loser" data-team-id="10">
-										<span>
-											<a href="#">
-												<!-- <img src="imgs/flags/Canada.png" alt="Canada"/> -->
-												<span>Canada</span>
-											</a>
-											<strong>2</strong>
-										</span>
-									</div>
-									<div class="m_dtls">
-										<!--Match date and time-->
-										<span></span>
-									</div>
-								</div>
-							</div>
-							<?php endfor; ?>
-						</td>
-						<?php endfor; ?>
+						<?php
+						for( $i = 1; $i <= $t_info['rounds']['count']; $i++ ){
+							$teams_in_the_round = pow( 2, $t_info['rounds']['count'] - ($i - 1) );
+							self::show_bracket_column( $t_info['rounds'], $i, 0, $teams_in_the_round/2 );
+						}
+						for( $i = $t_info['rounds']['count'] - 1; $i >= 1; $i-- ){
+							$teams_in_the_round = pow( 2, $t_info['rounds']['count'] - ($i - 1) );
+							self::show_bracket_column( $t_info['rounds'], $i, $teams_in_the_round/2, $teams_in_the_round, true );
+						}
+						?>
 					</tr>
 				</tbody>
 			</table>
 
 		</div>
 
+		<?php
+	}
+
+	/**
+	 *	Output a column in the tournament brackets.
+	 *
+	 *
+	 *
+	 */
+	public static function show_bracket_column( $rounds, $current_round, $start, $end, $reversed = false ){
+		?>
+		<td class="round_column r_<?php echo pow( 2, $rounds['count'] - ($current_round - 1) );?> <?php if( $reversed ) echo 'reversed'; ?>">
+			<?php for( $j = $start; $j < $end; $j += 2): ?>
+			<?php self::show_match( $rounds[$current_round]['players'], $j, $j+1 ); ?>
+			<?php endfor; ?>
+		</td>
+		<?php
+	}
+
+	/**
+	 * Output a match bracket.
+	 *
+	 * @var mixed[] $players Array of all the players.
+	 * @var int $p1 Index of player 1.
+	 * @var int $p2 Index of player 2.
+	 */
+	public static function show_match( $players, $p1, $p2 ){
+		?>
+		<div class="mtch_container">
+			<div class="match_unit">
+				<!--Match unite consist of top(.m_top) and bottom(.m_botm) teams with class (.winner) or (.loser) added-->
+				<div class="m_segment m_top winner" data-team-id="9">
+					<span>
+						<a href="#">
+							<!-- <img src="imgs/flags/Brazil.png" alt="Brazil"/> -->
+							<span><?php echo $p1; ?></span>
+						</a>
+						<strong>4</strong>
+					</span>
+				</div>
+				<div class="m_segment m_botm loser" data-team-id="10">
+					<span>
+						<a href="#">
+							<!-- <img src="imgs/flags/Canada.png" alt="Canada"/> -->
+							<span><?php echo $p2; ?></span>
+						</a>
+						<strong>2</strong>
+					</span>
+				</div>
+				<div class="m_dtls">
+					<!--Match date and time-->
+					<span></span>
+				</div>
+			</div>
+		</div>
 		<?php
 	}
 }
