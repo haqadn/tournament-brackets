@@ -423,7 +423,6 @@ Class Gaming_Tournament {
 		?>
 
 		<div class="brackets_container">
-			
 			<table class="t_of_<?php echo pow(2, $t_info['rounds']['count']);?>">
 				<thead>
 					<tr>
@@ -436,19 +435,22 @@ Class Gaming_Tournament {
 						<th>
 							<span><?php echo $t_info['rounds'][$i]['label']; ?></span>
 						</th>
-						<?php endfor; ?>ß
+						<?php endfor; ?>
 					</tr>
 				</thead>
 				<tbody>
 					<tr class="playground">
 						<?php
-						for( $i = 1; $i <= $t_info['rounds']['count']; $i++ ){
-							$teams_in_the_round = pow( 2, $t_info['rounds']['count'] - ($i - 1) );
-							self::show_bracket_column( $t_info['rounds'], $i, 0, $teams_in_the_round/2 );
+						for( $i = 1; $i < $t_info['rounds']['count']; $i++ ){
+							$matches_in_round = count( $t_info['rounds'][$i]['matches'] );
+							self::show_bracket_column( $t_info['rounds'], $i, 0, $matches_in_round/2 - 1 );
 						}
+
+						self::show_bracket_column( $t_info['rounds'], $t_info['rounds']['count'] );
+
 						for( $i = $t_info['rounds']['count'] - 1; $i >= 1; $i-- ){
-							$teams_in_the_round = pow( 2, $t_info['rounds']['count'] - ($i - 1) );
-							self::show_bracket_column( $t_info['rounds'], $i, $teams_in_the_round/2, $teams_in_the_round, true );
+							$matches_in_round = count( $t_info['rounds'][$i]['matches'] );
+							self::show_bracket_column( $t_info['rounds'], $i, $matches_in_round/2, $matches_in_round - 1, true );
 						}
 						?>
 					</tr>
@@ -466,11 +468,11 @@ Class Gaming_Tournament {
 	 *
 	 *
 	 */
-	public static function show_bracket_column( $rounds, $current_round, $start, $end, $reversed = false ){
+	public static function show_bracket_column( $rounds, $current_round, $start = 0, $end = 0, $reversed = false ){
 		?>
 		<td class="round_column r_<?php echo pow( 2, $rounds['count'] - ($current_round - 1) );?> <?php if( $reversed ) echo 'reversed'; ?>">
-			<?php for( $j = $start; $j < $end; $j += 2): ?>
-			<?php self::show_match( $rounds[$current_round]['players'], $j, $j+1 ); ?>
+			<?php for( $j = $start; $j <= $end; $j++ ): ?>
+			<?php self::show_match( $rounds[$current_round]['matches'][$j] ); ?>
 			<?php endfor; ?>
 		</td>
 		<?php
