@@ -29,6 +29,7 @@ Class Gaming_Tournament {
 		add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
 		add_action('wp_enqueue_scripts', [$this, 'enqueue_front_end_scripts']);
 		add_action('wp_ajax_autocomplete-username', [$this, 'autocomplete_username']);
+		add_action('wp_ajax_tournament-registration', [$this, 'register_player']);
 		add_action('save_post', [$this, 'update_tournament_meta']);
 
 
@@ -261,13 +262,22 @@ Class Gaming_Tournament {
 	 */
 	public function enqueue_front_end_scripts(){
 
+
+		wp_register_style( 'jquery-ui', 'http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css' );
+		wp_enqueue_style( 'jquery-ui' ); 
+
 		wp_enqueue_style( 'jquery-modal', plugins_url( 'css/jquery.modal.min.css', __FILE__ ), [], '0.7.0' );
 		wp_enqueue_script( 'jquery-modal', plugins_url( 'js/jquery.modal.min.js', __FILE__ ), ['jquery'], '0.7.0' );
 
 		wp_enqueue_script( 'jquery-countdown', plugins_url( 'js/jquery.countdown.min.js', __FILE__ ), ['jquery'], '0.7.0' );
+		wp_enqueue_script( 'jquery-ui-autocomplete' );
 
-		wp_enqueue_script( 'gaming-tournament', plugins_url( 'js/plugin.js', __FILE__ ), ['jquery', 'jquery-modal', 'jquery-countdown'] );
+		wp_register_script( 'gaming-tournament', plugins_url( 'js/plugin.js', __FILE__ ), ['jquery', 'jquery-modal', 'jquery-countdown', 'jquery-ui-autocomplete'] );
 		wp_enqueue_style( 'gaming-tournament', plugins_url( 'css/plugin.css', __FILE__ ) );
+		wp_localize_script( 'gaming-tournament', 'gt_info', [
+			'ajaxurl' => admin_url( 'admin-ajax.php' )
+		] );
+		wp_enqueue_script( 'gaming-tournament' );
 
 	}
 
@@ -276,10 +286,10 @@ Class Gaming_Tournament {
 	 */
 	public function autocomplete_username(){
 
-		$user_query = new WP_User_Query( ['search' => $_GET['query']."*"] );
+		$user_query = new WP_User_Query( ['search' => $_GET['term']."*"] );
 
 		echo json_encode( array_map( function( $user ){
-			return $user->data->user_login;
+			return [ 'id' => $user->ID, 'label' => $user->data->user_login, 'value' => $user->data->user_login ];
 		}, $user_query->get_results() ) );
 
 		exit;
@@ -316,7 +326,9 @@ Class Gaming_Tournament {
 					$ts['rounds'][$i]['matches'] = array_fill( 0, pow(2, $count-$i), [ 'p1' => [], 'p2' => [] ] );
 				}
 				else {
-					$ts['rounds'][$i]['matches'] = $old_settings['rounds'][$i]['matches'];
+
+					$ts['rounds'][$i]['matches'] = $old_rounds[$i]['matches'];
+
 				}
 			}
 
@@ -348,6 +360,8 @@ Class Gaming_Tournament {
 
 		$tournament_registration = get_post_meta( $tournament_id, '_tournament_setting_registration', true );
 		$registration_deadline   = get_post_meta( $tournament_id, '_tournament_setting_registration_deadline', true );
+		$registered_players      = get_post_meta( $tournament_id, '_tournament_setting_registered_players', true );
+		$registration_count      = get_post_meta( $tournament_id, '_tournament_setting_registration_count', true );
 		$rounds                  = (array) get_post_meta( $tournament_id, '_tournament_setting_rounds', true );
 		$matches                 = (array) get_post_meta( $tournament_id, '_tournament_setting_matches', true );
 
@@ -364,7 +378,9 @@ Class Gaming_Tournament {
 			'rounds' => $rounds,
 			'registration_deadline' => strtotime( $registration_deadline ),
 			'public_registration' => 'public' == $tournament_registration,
-			'current_round' => strtotime( $registration_deadline ) > time() ? 0 : $current_round
+			'current_round' => strtotime( $registration_deadline ) > time() ? 0 : $current_round,
+			'registration_count' => $registration_count,
+			'registered_players' => $registered_players
 		];
 
 	}
@@ -394,8 +410,41 @@ Class Gaming_Tournament {
 				<div class="countdown text-center" data-end-time="<?php echo date( 'Y-m-d H:i:s O', $r_info['registration_deadline'] ); ?>"></div>
 				<br>
 				<p class="text-center">
-					<button class="register" onClick="showRegistrationForm()"><?php _e( 'Register', 'gt' ); ?></button>
+					<?php if( !current_user_can( 'edit_post', $post->ID ) ): ?>
+					<a class="register btn btn-primary" rel="modal:open" href="#instructions"><?php _e( 'Register', 'gt' ); ?></a>
+					<?php else : ?>
+					<a class="register btn btn-primary" rel="modal:open" href="#tournament-registration-form"><?php _e( 'Add Player', 'gt' ); ?></a>
+					<?php endif; ?>
 				</p>
+
+				<div id="instructions" style="display:none">
+					<?php echo $help_text; ?>
+					<hr>
+					<a class="register btn btn-primary" rel="modal:open" href="#tournament-registration-form"><?php _e( 'Continue', 'gt' ); ?></a>
+				</div>
+
+				<form id="tournament-registration-form" method="GET" action="<?php echo admin_url('admin-ajax.php'); ?>" style="display:none">
+					<p>
+						<label for="team-url"><?php _e( 'My Team URL', 'gt' ); ?></label>
+						<input type="text" name="team_url" id="team-url" />
+					</p>
+					<?php if( current_user_can( 'edit_post', $post->ID ) ): ?>
+					<p>
+						<label for="username"><?php _e( 'Username', 'gt' ); ?></label>
+						<input type="text" name="username" id="username" />
+					</p>
+					<?php endif; ?>
+					<p class="text-center">
+						<button type="submit"><?php _e( 'Submit', 'gt' ); ?></button>
+					</p>
+
+					<p class="text-center result" style="display:none">
+
+					</p>
+					<input type="hidden" name="action" value="tournament-registration">
+					<input type="hidden" name="tournament_id" value="<?php echo $post->ID; ?>">
+					<?php wp_nonce_field( 'tournament-registration', 'registration_nonce' ); ?>
+				</form>
 
 			</div>
 			<?php
@@ -423,7 +472,6 @@ Class Gaming_Tournament {
 		?>
 
 		<div class="brackets_container">
-			
 			<table class="t_of_<?php echo pow(2, $t_info['rounds']['count']);?>">
 				<thead>
 					<tr>
@@ -442,13 +490,17 @@ Class Gaming_Tournament {
 				<tbody>
 					<tr class="playground">
 						<?php
-						for( $i = 1; $i <= $t_info['rounds']['count']; $i++ ){
-							$teams_in_the_round = pow( 2, $t_info['rounds']['count'] - ($i - 1) );
-							self::show_bracket_column( $t_info['rounds'], $i, 0, $teams_in_the_round/2 );
+
+						for( $i = 1; $i < $t_info['rounds']['count']; $i++ ){
+							$matches_in_round = count( $t_info['rounds'][$i]['matches'] );
+							self::show_bracket_column( $t_info['rounds'], $i, 0, $matches_in_round/2 - 1 );
 						}
+
+						self::show_bracket_column( $t_info['rounds'], $t_info['rounds']['count'] );
+
 						for( $i = $t_info['rounds']['count'] - 1; $i >= 1; $i-- ){
-							$teams_in_the_round = pow( 2, $t_info['rounds']['count'] - ($i - 1) );
-							self::show_bracket_column( $t_info['rounds'], $i, $teams_in_the_round/2, $teams_in_the_round, true );
+							$matches_in_round = count( $t_info['rounds'][$i]['matches'] );
+							self::show_bracket_column( $t_info['rounds'], $i, $matches_in_round/2, $matches_in_round - 1, true );
 						}
 						?>
 					</tr>
@@ -466,11 +518,12 @@ Class Gaming_Tournament {
 	 *
 	 *
 	 */
-	public static function show_bracket_column( $rounds, $current_round, $start, $end, $reversed = false ){
+
+	public static function show_bracket_column( $rounds, $current_round, $start = 0, $end = 0, $reversed = false ){
 		?>
 		<td class="round_column r_<?php echo pow( 2, $rounds['count'] - ($current_round - 1) );?> <?php if( $reversed ) echo 'reversed'; ?>">
-			<?php for( $j = $start; $j < $end; $j += 2): ?>
-			<?php self::show_match( $rounds[$current_round]['players'], $j, $j+1 ); ?>
+			<?php for( $j = $start; $j <= $end; $j++ ): ?>
+			<?php self::show_match( $rounds[$current_round]['matches'][$j] ); ?>
 			<?php endfor; ?>
 		</td>
 		<?php
@@ -513,6 +566,91 @@ Class Gaming_Tournament {
 			</div>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Find the next sequence to register.
+	 *
+	 * @var int $s Number to start from.
+	 * @var int $e Number to end on.
+	 */
+	private function get_registration_sequence( $s, $e ){
+		if( $s == $e ) return [$s]; // If only one, just return it.
+
+		// Divide the sequence in two.
+		$s1 = $s;
+		$e2 = $e;
+		$e1 = floor(($e+$s)/2);
+		$s2 = $e1+1;
+
+		$seq1 = $this->get_registration_sequence( $s1, $e1 );
+		$seq2 = $this->get_registration_sequence( $s2, $e2 );
+
+		//Combine the sequences
+		$combo_sequence = [];
+		for( $i = 0; $i < ($s+$e)/2; $i++ ){
+			$combo_sequence[] = $seq1[$i];
+			$combo_sequence[] = $seq2[$i];
+		}
+
+		return $combo_sequence;
+	}
+
+	private function ajax_response( $message, $success = false ){
+		echo json_encode( ['success' => $success, 'message' => $message] );
+		exit;
+	}
+
+	/**
+	 * Handle the request to register a player on a tournament.
+	 */
+	public function register_player(){
+
+		if( !wp_verify_nonce( $_GET['registration_nonce'], 'tournament-registration') )
+			$this->ajax_response( __( 'Invalid request.', 'gt' ) );
+
+		if( !is_user_logged_in() )
+			$this->ajax_response( __( 'You must be a logged in user to register.', 'gt' ) );
+
+		$t_info = self::get_tournament_info( $_GET['tournament_id'] );
+		if( time() > $t_info['registration_deadline'] )
+			$this->ajax_response( __( 'Registration has been closed.', 'gt' ) );
+
+		if( $t_info['registration_count'] >= pow(2, $t_info['rounds']['count']) )
+			$this->ajax_response( __( 'Registration quote over.', 'gt') );
+
+		$sequence = $this->get_registration_sequence( 0, pow(2, $t_info['rounds']['count'])-1 );
+		$rounds = get_post_meta( $_GET['tournament_id'], '_tournament_setting_rounds', true );
+		$match_index = $sequence[$t_info['registration_count']]/2;
+
+		$p = floor($match_index) == $match_index ? 'p1' : 'p2'; // Player one or two of the match
+		$match_index = floor($match_index);
+
+		if( current_user_can( 'edit_post', $_GET['tournament_id'] ) ){
+			$player = get_user_by( 'login', $_GET['username'] );
+
+			if( !$player )
+				$this->ajax_response( __( 'User does not exist.', 'gt' ) );
+
+			$player_id = $player->ID;
+		}
+		else {
+			$player_id = get_current_user_id();
+		}
+
+		if( isset( $t_info['registered_players'][$player_id] ) ){
+			$this->ajax_response( __( 'Player already registered.', 'gt' ) );
+		}
+
+		$rounds[1]['matches'][$match_index][$p] = $player_id;
+		$t_info['registration_count']++;
+		$t_info['registered_players'][$player_id] = ['ID' => $player_id, 'team_url' => $_GET['team_url']];
+
+		update_post_meta( $_GET['tournament_id'], '_tournament_setting_registration_count', $t_info['registration_count'] );
+		update_post_meta( $_GET['tournament_id'], '_tournament_setting_registered_players', $t_info['registered_players'] );
+		update_post_meta( $_GET['tournament_id'], '_tournament_setting_rounds', $rounds );
+
+		$this->ajax_response( __( 'Player registered', 'gt' ), true );
 	}
 }
 new Gaming_Tournament;

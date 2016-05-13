@@ -43,6 +43,10 @@
   display: none;
 }
 
+ul.ui-autocomplete.ui-menu {
+  z-index: 1000;
+}
+
 /*brackets style
 ------------------------------*/
 .brackets_container * {
