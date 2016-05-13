@@ -557,36 +557,44 @@ Class Gaming_Tournament {
 	 * Output a match bracket.
 	 *
 	 * @var mixed[] $players Array of all the players.
-	 * @var int $p1 Index of player 1.
-	 * @var int $p2 Index of player 2.
 	 */
-	public static function show_match( $match ){
+	public static function show_match( $match, $container_class = '' ){
+		global $post;
+		$t_info = self::get_tournament_info( $post->ID );
+
+		if( isset( $match['p1']['ID'] ) )
+			$player_1 = get_userdata( $match['p1']['ID'] );
+		else
+			$player_1 = false;
+
+		if( isset( $match['p2']['ID'] ) )
+			$player_2 = get_userdata( $match['p2']['ID'] );
+		else
+			$player_2 = false;
 		?>
-		<div class="mtch_container">
+		<div class="mtch_container <?php echo $container_class; ?>">
 			<div class="match_unit">
 				<!--Match unite consist of top(.m_top) and bottom(.m_botm) teams with class (.winner) or (.loser) added-->
-				<div class="m_segment m_top winner" data-team-id="9">
+				<div class="m_segment m_top" <?php echo $player_1 ? 'data-team-id="'.$player_1->ID.'"' : '' ?>>
 					<span>
-						<a href="#">
-							<!-- <img src="imgs/flags/Brazil.png" alt="Brazil"/> -->
-							<span><?php echo $p1; ?></span>
+						<a <?php echo $player_1 ? 'href="'.$t_info['registered_players'][$player_1->ID]['team_url'].'" target="_blank"' : 'href="#"'; ?>>
+							<span><?php echo $player_1 ? $player_1->get('user_login') : _x( 'TBD', 'To be decided', 'gt' ); ?></span>
 						</a>
-						<strong>4</strong>
+						<!-- <strong>4</strong> -->
 					</span>
 				</div>
-				<div class="m_segment m_botm loser" data-team-id="10">
+				<div class="m_segment m_botm" <?php echo $player_2 ? 'data-team-id="'.$player_2->ID.'"' : '' ?>>
 					<span>
-						<a href="#">
-							<!-- <img src="imgs/flags/Canada.png" alt="Canada"/> -->
-							<span><?php echo $p2; ?></span>
+						<a <?php echo $player_2 ? 'href="'.$t_info['registered_players'][$player_2->ID]['team_url'].'" target="_blank"' : 'href="#"'; ?>>
+							<span><?php echo $player_2 ? $player_2->get('user_login') : _x( 'TBD', 'To be decided', 'gt' ); ?></span>
 						</a>
-						<strong>2</strong>
+						<!-- <strong>2</strong> -->
 					</span>
 				</div>
-				<div class="m_dtls">
-					<!--Match date and time-->
+				<!-- <div class="m_dtls">
+					Match date and time
 					<span></span>
-				</div>
+				</div> -->
 			</div>
 		</div>
 		<?php
@@ -666,7 +674,7 @@ Class Gaming_Tournament {
 			$this->ajax_response( __( 'Player already registered.', 'gt' ) );
 		}
 
-		$rounds[1]['matches'][$match_index][$p] = $player_id;
+		$rounds[1]['matches'][$match_index][$p] = ['ID' => $player_id];
 		$t_info['registration_count']++;
 		$t_info['registered_players'][$player_id] = ['ID' => $player_id, 'team_url' => $_GET['team_url']];
 
