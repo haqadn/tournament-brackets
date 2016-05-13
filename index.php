@@ -402,20 +402,22 @@ Class Gaming_Tournament {
 
 		$registration_deadline = $r_info['registration_deadline'];
 
-		if( time() < $r_info['registration_deadline'] ){
+		if( time() < $r_info['registration_deadline'] && !( 'brackets' == $_GET['screen'] && current_user_can( 'edit_post', $post->ID ) ) ){
 			?>
 			<div class="tournament-status">
 				
 				<p class="text-center"><?php _e( 'Registration ends in:', 'gt' ); ?></p>
 				<div class="countdown text-center" data-end-time="<?php echo date( 'Y-m-d H:i:s O', $r_info['registration_deadline'] ); ?>"></div>
 				<br>
-				
+
 				<?php if( $r_info['registration_count'] < pow(2, $r_info['rounds']['count']) ): ?>
 				<p class="text-center">
 					<?php if( !current_user_can( 'edit_post', $post->ID ) ): ?>
 					<a class="register btn btn-primary" rel="modal:open" href="#instructions"><?php _e( 'Register', 'gt' ); ?></a>
 					<?php else : ?>
 					<a class="register btn btn-primary" rel="modal:open" href="#tournament-registration-form"><?php _e( 'Add Player', 'gt' ); ?></a>
+					 | 
+					<a href="<?php echo add_query_arg( 'screen', 'brackets' ); ?>" class="register btn btn-default"><?php _e( 'Show Brackets', 'gt' ); ?></a>
 					<?php endif; ?>
 				</p>
 				<?php endif; ?>
