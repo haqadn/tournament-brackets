@@ -409,6 +409,8 @@ Class Gaming_Tournament {
 				<p class="text-center"><?php _e( 'Registration ends in:', 'gt' ); ?></p>
 				<div class="countdown text-center" data-end-time="<?php echo date( 'Y-m-d H:i:s O', $r_info['registration_deadline'] ); ?>"></div>
 				<br>
+				
+				<?php if( $r_info['registration_count'] < pow(2, $r_info['rounds']['count']) ): ?>
 				<p class="text-center">
 					<?php if( !current_user_can( 'edit_post', $post->ID ) ): ?>
 					<a class="register btn btn-primary" rel="modal:open" href="#instructions"><?php _e( 'Register', 'gt' ); ?></a>
@@ -416,6 +418,7 @@ Class Gaming_Tournament {
 					<a class="register btn btn-primary" rel="modal:open" href="#tournament-registration-form"><?php _e( 'Add Player', 'gt' ); ?></a>
 					<?php endif; ?>
 				</p>
+				<?php endif; ?>
 
 				<div id="instructions" style="display:none">
 					<?php echo $help_text; ?>
