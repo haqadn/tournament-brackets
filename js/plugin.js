@@ -1,5 +1,11 @@
 (function($){
 	$(document).ready(function(){
+		if($('#username').length)
+		$('#username').autocomplete({
+			source: gt_info.ajaxurl+'?action=autocomplete-username',
+			minLength: 2
+		});
+
 		if( typeof $.fn.datetimepicker != 'undefined' )
 		$('.time-date-picker').datetimepicker({
 			controlType: 'select',
@@ -34,6 +40,32 @@
 		highlightRounds($('.r_4'));
 		highlightRounds($('.r_2'));
 
+		$('#tournament-registration-form').submit(function(e){
+			var el = $(this);
+			e.preventDefault();
+
+			$.get(
+				el.attr('action'),
+				el.serialize(),
+				function(data){
+					var result = el.find('.result');
+
+					console.log( data.message );
+					result.text(data.message);
+
+					result.fadeIn();
+					if( data.success ){
+						el.get(0).reset();
+					}
+
+					setTimeout(function(){
+						result.fadeOut();
+						result.text('');
+					}, 4000);
+				},
+				'json'
+			);
+		});
 	});
 
 	$(window).load(function(){
