@@ -484,7 +484,7 @@ Class Gaming_Tournament {
 						<th>
 							<span><?php echo $t_info['rounds'][$i]['label']; ?></span>
 						</th>
-						<?php endfor; ?>ß
+						<?php endfor; ?>
 					</tr>
 				</thead>
 				<tbody>
@@ -536,7 +536,7 @@ Class Gaming_Tournament {
 	 * @var int $p1 Index of player 1.
 	 * @var int $p2 Index of player 2.
 	 */
-	public static function show_match( $players, $p1, $p2 ){
+	public static function show_match( $match ){
 		?>
 		<div class="mtch_container">
 			<div class="match_unit">
