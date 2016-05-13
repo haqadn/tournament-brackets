@@ -525,11 +525,30 @@ Class Gaming_Tournament {
 	 */
 
 	public static function show_bracket_column( $rounds, $current_round, $start = 0, $end = 0, $reversed = false ){
+		$round_of = pow( 2, $rounds['count'] - ($current_round - 1) );
 		?>
-		<td class="round_column r_<?php echo pow( 2, $rounds['count'] - ($current_round - 1) );?> <?php if( $reversed ) echo 'reversed'; ?>">
+		<td class="round_column r_<?php echo $round_of;?> <?php if( $reversed ) echo ' reversed '; if( 2 == $round_of ) echo ' final '; ?>">
+
+			<?php if( 2 == $round_of ): ?>
+				<div class="winner_team">
+					<span>
+						WINNER
+						<a href="#">
+							<!-- <img src="imgs/flags/Brazil.png" alt="Brazil"> -->
+							<span>Brazil</span>
+						</a>
+					</span>
+				</div>
+			<?php endif; ?>
+			
 			<?php for( $j = $start; $j <= $end; $j++ ): ?>
-			<?php self::show_match( $rounds[$current_round]['matches'][$j] ); ?>
+				<?php self::show_match( $rounds[$current_round]['matches'][$j] ); ?>
 			<?php endfor; ?>
+
+			<?php if( 2 == $round_of ): ?>
+				<?php self::show_match( $rounds[$current_round]['matches'][1], 'third_position' ); ?>
+			<?php endif; ?>
+			
 		</td>
 		<?php
 	}
