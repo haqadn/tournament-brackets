@@ -322,13 +322,25 @@ Class Gaming_Tournament {
 			}
 
 			for( $i = 1; $i <= $count; $i++ ){
-				if( !isset( $old_rounds[$i] ) ){
-					$ts['rounds'][$i]['matches'] = array_fill( 0, pow(2, $count-$i), [ 'p1' => [], 'p2' => [] ] );
+				if( isset( $old_rounds[$i] ) ){
+					$ts['rounds'][$i]['matches'] = (array) $old_rounds[$i]['matches'];
 				}
 				else {
+					$ts['rounds'][$i]['matches'] = [];
+				}
 
-					$ts['rounds'][$i]['matches'] = $old_rounds[$i]['matches'];
+				
+				$expected_matches = pow(2, $count-$i);
+				$matches_filled = count( $ts['rounds'][$i]['matches'] );
 
+				if( $matches_filled < $expected_matches ) {
+
+					$ts['rounds'][$i]['matches'] = array_merge( $ts['rounds'][$i]['matches'], array_fill( $matches_filled, $expected_matches - $matches_filled, [ 'p1' => [], 'p2' => [] ] ) );
+
+				}
+
+				if( $matches_filled > $expected_matches ) {
+					$ts['rounds'][$i]['matches'] = array_slice( $ts['rounds'][$i]['matches'], 0, $expected_matches );
 				}
 			}
 
