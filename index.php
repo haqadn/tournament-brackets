@@ -182,6 +182,7 @@ Class Gaming_Tournament {
 											<th scope="col">#</th>
 											<th scope="col"><?php _e( 'Points', 'gt' );?></th>
 											<th scope="col"><?php _e( 'End Date', 'gt' ); ?></th>
+											<th scope="col"><?php _e( 'Match Per Pair', 'gt' ); ?></th>
 											<th scope="col"><?php _e( 'Total Players', 'gt' ); ?></th>
 										</tr>
 									</thead>
@@ -190,36 +191,42 @@ Class Gaming_Tournament {
 											<td><?php _e( '1', 'gt' ); ?></td>
 											<td><input type="number" name="tournament_settings[rounds][1][points]" class="form-field" value="<?php echo $rounds[1]['points']; ?>"></td>
 											<td><input type="text" name="tournament_settings[rounds][1][end_date]" class="form-field time-date-picker" value="<?php echo $rounds[1]['end_date']; ?>"></td>
+											<td><input type="text" name="tournament_settings[rounds][1][times]" value="<?php echo $rounds[1]['times']; ?>" class="form-field"></td>
 											<td><?php _e( '2', 'gt' ); ?></td>
 										</tr>
 										<tr>
 											<td><?php _e( '2', 'gt' ); ?></td>
 											<td><input type="number" name="tournament_settings[rounds][2][points]" class="form-field" value="<?php echo $rounds[2]['points']; ?>"></td>
 											<td><input type="text" name="tournament_settings[rounds][2][end_date]" class="form-field time-date-picker" value="<?php echo $rounds[2]['end_date']; ?>"></td>
+											<td><input type="text" name="tournament_settings[rounds][2][times]" value="<?php echo $rounds[2]['times']; ?>" class="form-field"></td>
 											<td><?php _e( '4', 'gt' ); ?></td>
 										</tr>
 										<tr>
 											<td><?php _e( '3', 'gt' ); ?></td>
 											<td><input type="number" name="tournament_settings[rounds][3][points]" class="form-field" value="<?php echo $rounds[3]['points']; ?>"></td>
 											<td><input type="text" name="tournament_settings[rounds][3][end_date]" class="form-field time-date-picker" value="<?php echo $rounds[3]['end_date']; ?>"></td>
+											<td><input type="text" name="tournament_settings[rounds][3][times]" value="<?php echo $rounds[3]['times']; ?>" class="form-field"></td>
 											<td><?php _e( '8', 'gt' ); ?></td>
 										</tr>
 										<tr>
 											<td><?php _e( '4', 'gt' ); ?></td>
 											<td><input type="number" name="tournament_settings[rounds][4][points]" class="form-field" value="<?php echo $rounds[4]['points']; ?>"></td>
 											<td><input type="text" name="tournament_settings[rounds][4][end_date]" class="form-field time-date-picker" value="<?php echo $rounds[4]['end_date']; ?>"></td>
+											<td><input type="text" name="tournament_settings[rounds][4][times]" value="<?php echo $rounds[4]['times']; ?>" class="form-field"></td>
 											<td><?php _e( '16', 'gt' ); ?></td>
 										</tr>
 										<tr>
 											<td><?php _e( '5', 'gt' ); ?></td>
 											<td><input type="number" name="tournament_settings[rounds][5][points]" class="form-field" value="<?php echo $rounds[5]['points']; ?>"></td>
 											<td><input type="text" name="tournament_settings[rounds][5][end_date]" class="form-field time-date-picker" value="<?php echo $rounds[5]['end_date']; ?>"></td>
+											<td><input type="text" name="tournament_settings[rounds][5][times]" value="<?php echo $rounds[5]['times']; ?>" class="form-field"></td>
 											<td><?php _e( '32', 'gt' ); ?></td>
 										</tr>
 										<tr>
 											<td><?php _e( '6', 'gt' ); ?></td>
 											<td><input type="number" name="tournament_settings[rounds][6][points]" class="form-field" value="<?php echo $rounds[6]['points']; ?>"></td>
 											<td><input type="text" name="tournament_settings[rounds][6][end_date]" class="form-field time-date-picker" value="<?php echo $rounds[6]['end_date']; ?>"></td>
+											<td><input type="text" name="tournament_settings[rounds][6][times]" value="<?php echo $rounds[6]['times']; ?>" class="form-field"></td>
 											<td><?php _e( '64', 'gt' ); ?></td>
 										</tr>
 									</tbody>
