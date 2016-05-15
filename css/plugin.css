@@ -29,6 +29,7 @@
 
 .brackets_container table {
 	width: auto;
+  min-width: 100%;
 }
 
 .mtch_container {
@@ -85,7 +86,11 @@ ul.ui-autocomplete.ui-menu {
   box-shadow: 0 -3px 0 #cc0000; }
 
 .t_of_4 .r_4 .mtch_container {
-  padding: 20px 0; }
+  padding: 100px 0; }
+
+.t_of_4 .mtch_container.third_position {
+  margin-top: 20px;
+  margin-bottom: 20px; }
 
 .t_of_4 .r_4 .m_segment {
   height: 45px; }
@@ -97,7 +102,11 @@ ul.ui-autocomplete.ui-menu {
   height: 45px; }
 
 .t_of_8 .r_4 .mtch_container {
-  padding: 50px 0; }
+  padding: 75px 0; }
+  
+.t_of_8 .mtch_container.third_position {
+  margin-top: 50px;
+  margin-bottom: 50px; }
 
 .t_of_8 .r_4 .m_segment {
   height: 80px; }
@@ -431,7 +440,7 @@ ul.ui-autocomplete.ui-menu {
 
 .third_position {
   position: absolute;
-  width: 92%;
+  width: 95%;
   padding: 0;
   margin-top: 100px; }
 
