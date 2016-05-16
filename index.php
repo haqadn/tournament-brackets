@@ -30,6 +30,8 @@ Class Gaming_Tournament {
 		add_action('wp_enqueue_scripts', [$this, 'enqueue_front_end_scripts']);
 		add_action('wp_ajax_autocomplete-username', [$this, 'autocomplete_username']);
 		add_action('wp_ajax_tournament-registration', [$this, 'register_player']);
+		add_action('wp_ajax_get-match-result-modal', [$this, 'match_result_modal_content']);
+		add_action('wp_ajax_update-match-result', [$this, 'update_match_result']);
 		add_action('save_post', [$this, 'update_tournament_meta']);
 
 
@@ -281,9 +283,21 @@ Class Gaming_Tournament {
 
 		wp_register_script( 'gaming-tournament', plugins_url( 'js/plugin.js', __FILE__ ), ['jquery', 'jquery-modal', 'jquery-countdown', 'jquery-ui-autocomplete'] );
 		wp_enqueue_style( 'gaming-tournament', plugins_url( 'css/plugin.css', __FILE__ ) );
-		wp_localize_script( 'gaming-tournament', 'gt_info', [
+		
+		$plugin_data = [
 			'ajaxurl' => admin_url( 'admin-ajax.php' )
-		] );
+		];
+		if( is_singular( 'tournament' ) ) {
+
+			global $post;
+			$plugin_data['tournament_id'] = $post->ID;
+			$plugin_data['tournament_info'] = self::get_tournament_info( $post->ID );
+			$plugin_data['current_user'] = get_current_user_id();
+			$plugin_data['can_edit'] = current_user_can( 'edit_post', $post->ID );
+			
+		}
+
+		wp_localize_script( 'gaming-tournament', 'gt_info', $plugin_data );
 		wp_enqueue_script( 'gaming-tournament' );
 
 	}
@@ -342,7 +356,7 @@ Class Gaming_Tournament {
 
 				if( $matches_filled < $expected_matches ) {
 
-					$ts['rounds'][$i]['matches'] = array_merge( $ts['rounds'][$i]['matches'], array_fill( $matches_filled, $expected_matches - $matches_filled, [ 'p1' => [], 'p2' => [] ] ) );
+					$ts['rounds'][$i]['matches'] = array_merge( $ts['rounds'][$i]['matches'], array_fill( $matches_filled, $expected_matches - $matches_filled, [ 'p1' => false, 'p2' => false ] ) );
 
 				}
 
@@ -384,11 +398,13 @@ Class Gaming_Tournament {
 		$rounds                  = (array) get_post_meta( $tournament_id, '_tournament_setting_rounds', true );
 		$matches                 = (array) get_post_meta( $tournament_id, '_tournament_setting_matches', true );
 
-		for( $i = 6 - $rounds['count'], $r = 1; $r <= $rounds['count']; $i++, $r++ ){
-			$rounds[$r]['label'] = 1 === $r ? $round_labels[0] : $round_labels[$i];
+		$current_round = $rounds['count'] + 1;
+		for( $l = 6 - $rounds['count'], $r = 1; $r <= $rounds['count']; $l++, $r++ ){
+			$rounds[$r]['label'] = 1 === $r ? $round_labels[0] : $round_labels[$l];
 			$rounds[$r]['end_date'] = strtotime( $rounds[$r]['end_date'] );
 
-			$current_round = -1;
+			if( $current_round != $rounds['count'] + 1 ) continue;
+
 			if( $rounds[$r]['end_date'] > time() )
 				$current_round = $r;
 		}
@@ -417,23 +433,23 @@ Class Gaming_Tournament {
 
 		ob_start();
 
-		$r_info = self::get_tournament_info( $post->ID );
+		$t_info = self::get_tournament_info( $post->ID );
 
-		$registration_deadline = $r_info['registration_deadline'];
+		$registration_deadline = $t_info['registration_deadline'];
 
-		if( time() < $r_info['registration_deadline'] && !( 'brackets' == $_GET['screen'] && current_user_can( 'edit_post', $post->ID ) ) ){
+		if( time() < $t_info['registration_deadline'] && !( 'brackets' == $_GET['screen'] && current_user_can( 'edit_post', $post->ID ) ) ){
 			?>
 			<div class="tournament-status">
 				
 				<p class="text-center"><?php _e( 'Registration ends in:', 'gt' ); ?></p>
-				<div class="countdown text-center" data-end-time="<?php echo date( 'Y-m-d H:i:s O', $r_info['registration_deadline'] ); ?>"></div>
+				<div class="countdown text-center" data-end-time="<?php echo date( 'Y-m-d H:i:s O', $t_info['registration_deadline'] ); ?>"></div>
 				<br>
 
 				<p class="text-center">
 					<?php if( !current_user_can( 'edit_post', $post->ID ) ): ?>
 						<a class="register btn btn-primary" rel="modal:open" href="#instructions"><?php _e( 'Register', 'gt' ); ?></a>
 					<?php else : ?>
-						<?php if( $r_info['registration_count'] < pow(2, $r_info['rounds']['count']) ): ?>
+						<?php if( $t_info['registration_count'] < pow(2, $t_info['rounds']['count']) ): ?>
 							<a class="register btn btn-primary" rel="modal:open" href="#tournament-registration-form"><?php _e( 'Add Player', 'gt' ); ?></a>
 							 | 
 						<?php endif; ?>
@@ -462,9 +478,8 @@ Class Gaming_Tournament {
 						<button type="submit"><?php _e( 'Submit', 'gt' ); ?></button>
 					</p>
 
-					<p class="text-center result" style="display:none">
-
-					</p>
+					<p class="text-center result hidden"></p>
+					
 					<input type="hidden" name="action" value="tournament-registration">
 					<input type="hidden" name="tournament_id" value="<?php echo $post->ID; ?>">
 					<?php wp_nonce_field( 'tournament-registration', 'registration_nonce' ); ?>
@@ -546,7 +561,7 @@ Class Gaming_Tournament {
 	public static function show_bracket_column( $rounds, $current_round, $start = 0, $end = 0, $reversed = false ){
 		$round_of = pow( 2, $rounds['count'] - ($current_round - 1) );
 		?>
-		<td class="round_column r_<?php echo $round_of;?> <?php if( $reversed ) echo ' reversed '; if( 2 == $round_of ) echo ' final '; ?>">
+		<td class="round_column r_<?php echo $round_of;?> <?php if( $reversed ) echo ' reversed '; if( 2 == $round_of ) echo ' final '; ?>" data-round="<?php echo $current_round; ?>">
 
 			<?php if( 2 == $round_of ): ?>
 				<div class="winner_team">
@@ -561,11 +576,11 @@ Class Gaming_Tournament {
 			<?php endif; ?>
 			
 			<?php for( $j = $start; $j <= $end; $j++ ): ?>
-				<?php self::show_match( $rounds[$current_round]['matches'][$j] ); ?>
+				<?php self::show_match( $rounds[$current_round]['matches'][$j], $j ); ?>
 			<?php endfor; ?>
 
 			<?php if( 2 == $round_of ): ?>
-				<?php self::show_match( $rounds[$current_round]['matches'][1], 'third_position' ); ?>
+				<?php self::show_match( $rounds[$current_round]['matches'][1], $j, 'third_position' ); ?>
 			<?php endif; ?>
 			
 		</td>
@@ -576,22 +591,24 @@ Class Gaming_Tournament {
 	 * Output a match bracket.
 	 *
 	 * @var mixed[] $players Array of all the players.
+	 * @var int $j index of the match.
+	 * @var string $container_class class for the match container.
 	 */
-	public static function show_match( $match, $container_class = '' ){
+	public static function show_match( $match, $j, $container_class = '' ){
 		global $post;
 		$t_info = self::get_tournament_info( $post->ID );
 
-		if( isset( $match['p1']['ID'] ) )
-			$player_1 = get_userdata( $match['p1']['ID'] );
+		if( isset( $match['p1'] ) )
+			$player_1 = get_userdata( $match['p1'] );
 		else
 			$player_1 = false;
 
-		if( isset( $match['p2']['ID'] ) )
-			$player_2 = get_userdata( $match['p2']['ID'] );
+		if( isset( $match['p2'] ) )
+			$player_2 = get_userdata( $match['p2'] );
 		else
 			$player_2 = false;
 		?>
-		<div class="mtch_container <?php echo $container_class; ?>">
+		<div class="mtch_container <?php echo $container_class; ?>" data-match-index="<?php echo $j; ?>">
 			<div class="match_unit">
 				<!--Match unite consist of top(.m_top) and bottom(.m_botm) teams with class (.winner) or (.loser) added-->
 				<div class="m_segment m_top" <?php echo $player_1 ? 'data-team-id="'.$player_1->ID.'"' : '' ?>>
@@ -693,7 +710,7 @@ Class Gaming_Tournament {
 			$this->ajax_response( __( 'Player already registered.', 'gt' ) );
 		}
 
-		$rounds[1]['matches'][$match_index][$p] = ['ID' => $player_id];
+		$rounds[1]['matches'][$match_index][$p] = $player_id;
 		$t_info['registration_count']++;
 		$t_info['registered_players'][$player_id] = ['ID' => $player_id, 'team_url' => $_GET['team_url']];
 
@@ -702,6 +719,141 @@ Class Gaming_Tournament {
 		update_post_meta( $_GET['tournament_id'], '_tournament_setting_rounds', $rounds );
 
 		$this->ajax_response( __( 'Player registered', 'gt' ), true );
+	}
+
+	/**
+	 * Update match result.
+	 * Update result of a match through ajax request.
+	 */
+	public function update_match_result() {
+		extract( $_POST );
+
+		if( !wp_verify_nonce( $nonce, "match-$tournament_id-$round-$match_index-update" ) )
+			$this->ajax_response( __( 'Invalid request.', 'gt' ) );
+
+		$user = get_current_user_id();
+
+		// $t_info = self::get_tournament_info( $tournament_id );
+		$rounds = get_post_meta( $tournament_id, '_tournament_setting_rounds', true );
+		$match = $rounds[$round]['matches'][$match_index];
+		$times = (int) $rounds[$round]['times'];
+
+		if( $match['p1'] != $user && $match['p2'] != $user && !current_user_can( 'edit_post', $tournament_id ) )
+			$this->ajax_response( __( 'You are not allowed to update the report of this match.', 'gt' ) );
+
+		if( $match['p1'] == $user ){
+			$p = 'p1';
+		}
+
+		if( $match['p2'] == $user ){
+			$p = 'p2';
+		}
+
+		if( current_user_can( 'edit_post', $tournament_id ) )
+			$p = 'admin';
+		
+		if( isset( $match['report']['admin'] ) && !current_user_can( 'edit_post', $tournament_id ) )
+			$this->ajax_response( __( 'Match report fixed by admin.', 'gt' ) );
+
+		for( $i = 1; $i <= $times; $i++ ){
+			if( current_user_can( 'edit_post', $tournament_id ) ){
+				$score = ['p1' => 0, 'p2' => 0];
+
+				if( $match_result['p1'][$i] > $match_result['p2'][$i] )
+					$score[$p1]++;
+				else if( $match_result['p1'][$i] < $match_result['p2'][$i] )
+					$score[$p2]++;
+			}
+			elseif( $match_result['p1'][$i] == $match_result['p2'][$i] ) {
+				$this->ajax_response( __( 'Match result cannot be a tie.', 'gt' ) );
+			}
+		}
+
+		$rounds[$round]['matches'][$match_index]['report'][$p] = $match_result;
+		if( isset( $score ) ){
+			$rounds[$round]['matches'][$match_index]['report']['score'] = $score;
+		}
+
+		/**
+		Update brackets based on it.
+		 */
+
+
+		update_post_meta( $tournament_id, '_tournament_setting_rounds', $rounds );
+		$this->ajax_response( __( 'Report saved.', 'gt' ), true );
+
+
+
+	}
+
+	/**
+	 * Outputs the content for match result modal.
+	 */
+	public function match_result_modal_content() {
+		extract( $_GET );
+
+		/**
+		 User access validation
+		 */
+
+		$t_info = self::get_tournament_info( $tournament_id );
+		$times = (int) $t_info['rounds'][$round]['times'];
+		$match = $t_info['rounds'][$round]['matches'][$match_index];
+		$p1 = get_userdata( $match['p1'] );
+		$p2 = get_userdata( $match['p2'] );
+
+		if( $p1->ID == get_current_user_id() ){
+			$p = 'p1';
+			$o = 'p2';
+		}
+
+		if( $p2->ID == get_current_user_id() ){
+			$p = 'p2';
+			$o = 'p1';
+		}
+
+		if( isset( $match['report']['admin'] ) )
+			$report = $match['report']['admin'];
+		elseif( isset( $match['report'][$p] ) )
+			$report = $match['report'][$p];
+		elseif( isset( $match['report'][$o] ) )
+			$report = $match['report'][$o];
+		else
+			$report = ['p1' => array_fill( 1, $times, '' ), 'p2' => array_fill( 1, $times, '' )];
+
+		?>
+		<form class="match-result text-center" action="<?php admin_url('admin-ajax.php'); ?>" method="POST">
+			<?php for( $i = 1; $i <= $times; $i++ ): ?>
+			<div class="match">
+				<?php if( 1 != $times): ?>
+					<h1><?php printf( __( 'Match: %d', 'gt' ), $i ); ?></h1>
+				<?php endif; ?>
+			
+				<label class="username">
+					<?php echo $p1->data->user_login; ?>
+					<input type="text" name="match_result[p1][<?php echo $i;?>]" <?php echo '' != $report['p1'][$i] ? 'value="'.$report['p1'][$i].'"' : '';?>>
+				</label>
+				<div>vs.</div>
+				<label class="username">
+					<?php echo $p2->data->user_login; ?>
+					<input type="text" name="match_result[p2][<?php echo $i;?>]" <?php echo '' != $report['p2'][$i] ? 'value="'.$report['p2'][$i].'"' : '';?>>
+				</label>
+			</div>
+			<?php endfor; ?>
+
+
+			<?php if( !isset( $match['report']['admin'] ) || current_user_can( 'edit_post', $tournament_id ) ): ?>
+			<button type="submit"><?php _e( 'Submit', 'gt' ); ?></button>
+			<p class="response hidden"></p>
+			<input type="hidden" name="action" value="update-match-result">
+			<input type="hidden" name="tournament_id" value="<?php echo $tournament_id; ?>">
+			<input type="hidden" name="round" value="<?php echo $round; ?>">
+			<input type="hidden" name="match_index" value="<?php echo $match_index; ?>">
+			<?php wp_nonce_field( "match-$tournament_id-$round-$match_index-update", 'nonce' ); ?>
+			<?php endif; ?>
+		</form>
+		<?php
+		exit;
 	}
 }
 new Gaming_Tournament;

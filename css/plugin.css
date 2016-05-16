@@ -48,6 +48,17 @@ ul.ui-autocomplete.ui-menu {
   z-index: 1000;
 }
 
+.match-result .username input[type=text] {
+  width: 40px;
+  height: 30px;
+  border: none;
+  border-bottom: 1px solid;
+}
+
+.match-result .match:not(:last-child) {
+  margin-bottom: 30px;
+}
+
 /*brackets style
 ------------------------------*/
 .brackets_container * {
