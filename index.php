@@ -792,10 +792,6 @@ Class Gaming_Tournament {
 	public function match_result_modal_content() {
 		extract( $_GET );
 
-		/**
-		 User access validation
-		 */
-
 		$t_info = self::get_tournament_info( $tournament_id );
 		$times = (int) $t_info['rounds'][$round]['times'];
 		$match = $t_info['rounds'][$round]['matches'][$match_index];
@@ -806,10 +802,12 @@ Class Gaming_Tournament {
 			$p = 'p1';
 			$o = 'p2';
 		}
-
-		if( $p2->ID == get_current_user_id() ){
+		elseif( $p2->ID == get_current_user_id() ){
 			$p = 'p2';
 			$o = 'p1';
+		}
+		elseif( !current_user_can( 'edit_post', $tournament_id ) ){
+			$this->ajax_response( __( 'You are not welcome.', 'gt' ) );
 		}
 
 		if( isset( $match['report']['admin'] ) )
