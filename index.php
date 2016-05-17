@@ -831,12 +831,12 @@ Class Gaming_Tournament {
 			
 				<label class="username">
 					<?php echo $p1->data->user_login; ?>
-					<input type="text" name="match_result[p1][<?php echo $i;?>]" <?php echo '' != $report['p1'][$i] ? 'value="'.$report['p1'][$i].'"' : '';?>>
+					<input type="number" name="match_result[p1][<?php echo $i;?>]" <?php echo '' != $report['p1'][$i] ? 'value="'.$report['p1'][$i].'"' : '';?>>
 				</label>
 				<div>vs.</div>
 				<label class="username">
 					<?php echo $p2->data->user_login; ?>
-					<input type="text" name="match_result[p2][<?php echo $i;?>]" <?php echo '' != $report['p2'][$i] ? 'value="'.$report['p2'][$i].'"' : '';?>>
+					<input type="number" name="match_result[p2][<?php echo $i;?>]" <?php echo '' != $report['p2'][$i] ? 'value="'.$report['p2'][$i].'"' : '';?>>
 				</label>
 			</div>
 			<?php endfor; ?>
