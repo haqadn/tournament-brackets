@@ -446,14 +446,16 @@ Class Gaming_Tournament {
 				<br>
 
 				<p class="text-center">
-					<?php if( !current_user_can( 'edit_post', $post->ID ) ): ?>
-						<a class="register btn btn-primary" rel="modal:open" href="#instructions"><?php _e( 'Register', 'gt' ); ?></a>
-					<?php else : ?>
+					<?php if( current_user_can( 'edit_post', $post->ID ) ): ?>
 						<?php if( $t_info['registration_count'] < pow(2, $t_info['rounds']['count']) ): ?>
 							<a class="register btn btn-primary" rel="modal:open" href="#tournament-registration-form"><?php _e( 'Add Player', 'gt' ); ?></a>
 							 | 
 						<?php endif; ?>
 						<a href="<?php echo add_query_arg( 'screen', 'brackets' ); ?>" class="register btn btn-default"><?php _e( 'Show Brackets', 'gt' ); ?></a>
+					<?php elseif( is_user_logged_in() && $t_info['registration_count'] < pow(2, $t_info['rounds']['count']) ): ?>
+						<a class="register btn btn-primary" rel="modal:open" href="#instructions"><?php _e( 'Register', 'gt' ); ?></a>
+					<?php else : ?>
+						<?php printf( __( 'You must be <a href="%s">logged in</a> to perticipate.', 'gt' ), wp_login_url( get_permalink() ) ); ?>
 					<?php endif; ?>
 				</p>
 
