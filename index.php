@@ -556,11 +556,7 @@ Class Gaming_Tournament {
 
 	/**
 	 *	Output a column in the tournament brackets.
-	 *
-	 *
-	 *
 	 */
-
 	public static function show_bracket_column( $rounds, $current_round, $start = 0, $end = 0, $reversed = false ){
 		$round_of = pow( 2, $rounds['count'] - ($current_round - 1) );
 		?>
@@ -781,9 +777,6 @@ Class Gaming_Tournament {
 
 		update_post_meta( $tournament_id, '_tournament_setting_rounds', $rounds );
 		$this->ajax_response( __( 'Report saved.', 'gt' ), true );
-
-
-
 	}
 
 	/**
