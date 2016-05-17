@@ -352,6 +352,7 @@ Class Gaming_Tournament {
 
 				
 				$expected_matches = pow(2, $count-$i);
+				if( $i == $count ) $expected_matches++;
 				$matches_filled = count( $ts['rounds'][$i]['matches'] );
 
 				if( $matches_filled < $expected_matches ) {
@@ -537,7 +538,7 @@ Class Gaming_Tournament {
 							self::show_bracket_column( $t_info['rounds'], $i, 0, $matches_in_round/2 - 1 );
 						}
 
-						self::show_bracket_column( $t_info['rounds'], $t_info['rounds']['count'] );
+						self::show_bracket_column( $t_info['rounds'], $t_info['rounds']['count'], 0, 1 );
 
 						for( $i = $t_info['rounds']['count'] - 1; $i >= 1; $i-- ){
 							$matches_in_round = count( $t_info['rounds'][$i]['matches'] );
@@ -578,12 +579,9 @@ Class Gaming_Tournament {
 			<?php endif; ?>
 			
 			<?php for( $j = $start; $j <= $end; $j++ ): ?>
-				<?php self::show_match( $rounds[$current_round]['matches'][$j], $j ); ?>
+				<?php $class = $round_of == 2 && $j == $end ? 'third_position' : ''; ?>
+				<?php self::show_match( $rounds[$current_round]['matches'][$j], $j, $class ); ?>
 			<?php endfor; ?>
-
-			<?php if( 2 == $round_of ): ?>
-				<?php self::show_match( $rounds[$current_round]['matches'][1], $j, 'third_position' ); ?>
-			<?php endif; ?>
 			
 		</td>
 		<?php
