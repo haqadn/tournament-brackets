@@ -562,13 +562,13 @@ Class Gaming_Tournament {
 		?>
 		<td class="round_column r_<?php echo $round_of;?> <?php if( $reversed ) echo ' reversed '; if( 2 == $round_of ) echo ' final '; ?>" data-round="<?php echo $current_round; ?>">
 
-			<?php if( 2 == $round_of ): ?>
+			<?php if( 2 == $round_of && isset( $rounds[$current_round]['matches'][0]['winner'] ) && null != $rounds[$current_round]['matches'][0]['winner'] ): ?>
+				<?php $winner_player = get_userdata( $rounds[$current_round]['matches'][0]['winner'] ) ?>
 				<div class="winner_team">
 					<span>
-						WINNER
-						<a href="#">
-							<!-- <img src="imgs/flags/Brazil.png" alt="Brazil"> -->
-							<span>Brazil</span>
+						<?php _e( 'WINNER', 'gt' ); ?>
+						<a href="<?php echo $t_info['registered_players'][$player_1->ID]['team_url']; ?>">
+							<span><?php echo $winner_player->get('user_login'); ?></span>
 						</a>
 					</span>
 				</div>
@@ -576,7 +576,7 @@ Class Gaming_Tournament {
 			
 			<?php for( $j = $start; $j <= $end; $j++ ): ?>
 				<?php $class = $round_of == 2 && $j == $end ? 'third_position' : ''; ?>
-				<?php self::show_match( $rounds[$current_round]['matches'][$j], $j, $class ); ?>
+				<?php self::show_match( $rounds[$current_round]['matches'][$j], $current_round, $j, $class ); ?>
 			<?php endfor; ?>
 			
 		</td>
@@ -587,40 +587,92 @@ Class Gaming_Tournament {
 	 * Output a match bracket.
 	 *
 	 * @var mixed[] $players Array of all the players.
+	 * @var int $round Round number of the round this match belongs to.
 	 * @var int $j index of the match.
 	 * @var string $container_class class for the match container.
 	 */
-	public static function show_match( $match, $j, $container_class = '' ){
+	public static function show_match( $match, $round, $j, $container_class = '' ){
 		global $post;
 		$t_info = self::get_tournament_info( $post->ID );
 
-		if( isset( $match['p1'] ) )
+		if( isset( $match['p1'] ) && $match['p1'] ){
 			$player_1 = get_userdata( $match['p1'] );
-		else
-			$player_1 = false;
+			$p1_name = $player_1->get('user_login');
+			$p1_class = [];
+			if( isset( $match['winner'] ) && $match['winner'] != null ){
+				$p1_class[] = $match['winner'] == $player_1->ID ? 'winner' : 'looser';
 
-		if( isset( $match['p2'] ) )
+				if( $t_info['rounds']['count'] == $round ){
+					// Final round
+					if( 0 == $j ){
+						// Final match
+						$p1_class[] = $match['winner'] == $player_1->ID ? 'first' : 'second';
+					}
+					elseif( 1 == $j ){
+						// Third place match
+						$p1_class[] = $match['winner'] == $player_1->ID ? 'third' : 'fourth';
+					}
+				}
+			}
+
+			$p1_class = implode( ' ', $p1_class );
+
+			$p1_goals = isset( $match['report']['visible'] ) ? $match['report']['visible']['p1'] : '';
+
+		}
+		else {
+			$player_1 = false;
+			$p1_name = $t_info['current_round'] > $round ? _x( 'TBD', 'To be decided', 'gt' ) : '';
+			$p1_class = '';
+		}
+
+		if( isset( $match['p2'] ) && $match['p2'] ){
 			$player_2 = get_userdata( $match['p2'] );
-		else
+			$p2_name = $player_2->get('user_login');
+			$p2_class = [];
+			if( isset( $match['winner'] ) && $match['winner'] != null ){
+				$p2_class[] = $match['winner'] == $player_2->ID ? 'winner' : 'looser';
+
+				if( $t_info['rounds']['count'] == $round ){
+					// Final round
+					if( 0 == $j ){
+						// Final match
+						$p2_class[] = $match['winner'] == $player_2->ID ? 'first' : 'second';
+					}
+					elseif( 1 == $j ){
+						// Third place match
+						$p2_class[] = $match['winner'] == $player_2->ID ? 'third' : 'fourth';
+					}
+				}
+			}
+
+			$p2_class = implode( ' ', $p2_class );
+
+			$p2_goals = isset( $match['report']['visible'] ) ? $match['report']['visible']['p2'] : '';
+		}
+		else {
 			$player_2 = false;
+			$p2_name = $t_info['current_round'] > $round ? _x( 'TBD', 'To be decided', 'gt' ) : '';
+			$p2_class = '';
+		}
 		?>
 		<div class="mtch_container <?php echo $container_class; ?>" data-match-index="<?php echo $j; ?>">
 			<div class="match_unit">
 				<!--Match unite consist of top(.m_top) and bottom(.m_botm) teams with class (.winner) or (.loser) added-->
-				<div class="m_segment m_top" <?php echo $player_1 ? 'data-team-id="'.$player_1->ID.'"' : '' ?>>
+				<div class="m_segment m_top <?php echo $p1_class; ?>" <?php echo $player_1 ? 'data-team-id="'.$player_1->ID.'"' : '' ?>>
 					<span>
 						<a <?php echo $player_1 ? 'href="'.$t_info['registered_players'][$player_1->ID]['team_url'].'" target="_blank"' : 'href="#"'; ?>>
-							<span><?php echo $player_1 ? $player_1->get('user_login') : _x( 'TBD', 'To be decided', 'gt' ); ?></span>
+							<span><?php echo $p1_name; ?></span>
 						</a>
-						<!-- <strong>4</strong> -->
+						<strong><?php echo $p1_goals; ?></strong>
 					</span>
 				</div>
-				<div class="m_segment m_botm" <?php echo $player_2 ? 'data-team-id="'.$player_2->ID.'"' : '' ?>>
+				<div class="m_segment m_botm <?php echo $p2_class; ?>" <?php echo $player_2 ? 'data-team-id="'.$player_2->ID.'"' : '' ?>>
 					<span>
 						<a <?php echo $player_2 ? 'href="'.$t_info['registered_players'][$player_2->ID]['team_url'].'" target="_blank"' : 'href="#"'; ?>>
-							<span><?php echo $player_2 ? $player_2->get('user_login') : _x( 'TBD', 'To be decided', 'gt' ); ?></span>
+							<span><?php echo $p2_name; ?></span>
 						</a>
-						<!-- <strong>2</strong> -->
+						<strong><?php echo $p2_goals; ?></strong>
 					</span>
 				</div>
 				<!-- <div class="m_dtls">
@@ -751,14 +803,14 @@ Class Gaming_Tournament {
 		if( isset( $match['report']['admin'] ) && !current_user_can( 'edit_post', $tournament_id ) )
 			$this->ajax_response( __( 'Match report fixed by admin.', 'gt' ) );
 
+		$score = ['p1' => 0, 'p2' => 0];
 		for( $i = 1; $i <= $times; $i++ ){
 			if( current_user_can( 'edit_post', $tournament_id ) ){
-				$score = ['p1' => 0, 'p2' => 0];
 
 				if( $match_result['p1'][$i] > $match_result['p2'][$i] )
-					$score[$p1]++;
+					$score['p1']++;
 				else if( $match_result['p1'][$i] < $match_result['p2'][$i] )
-					$score[$p2]++;
+					$score['p2']++;
 			}
 			elseif( $match_result['p1'][$i] == $match_result['p2'][$i] ) {
 				$this->ajax_response( __( 'Match result cannot be a tie.', 'gt' ) );
@@ -770,13 +822,144 @@ Class Gaming_Tournament {
 			$rounds[$round]['matches'][$match_index]['report']['score'] = $score;
 		}
 
-		/**
-		Update brackets based on it.
-		 */
+		update_post_meta( $tournament_id, '_tournament_setting_rounds', $rounds );
 
+		if( current_user_can( 'edit_post', $tournament_id ) ){
+			$this->process_match_result( $tournament_id, $round, $match_index );
+		}
+
+		$this->ajax_response( __( 'Report saved.', 'gt' ), true );
+	}
+
+	/**
+	 * Process all the matches of a round.
+	 * This should be called after a round has ended. Usually through a cron job.
+	 */
+	public static function process_round_result( $tournament_id, $round ){
+		$rounds = get_post_meta( $tournament_id, '_tournament_setting_rounds', true );
+		$count = $rounds['count'];
+		$matches_in_round = pow( 2, $count - $round );
+
+		for( $i = 0; $i < $matches_in_round; $i++ ){
+			self::process_match_result( $tournament_id, $round, $i );	
+		}
+		if( $round == $count ){
+			// Final round
+			self::process_match_result( $tournament_id, $round, 1 );
+		}
+	}
+
+	/**
+	 * Process a match result and promotes the winner to next level.
+	 */
+	public static function process_match_result( $tournament_id, $round, $match ){
+		
+		if( get_post_type( $tournament_id ) != 'tournament' ) return;
+
+		$rounds = get_post_meta( $tournament_id, '_tournament_setting_rounds', true );
+		$count = $rounds['count'];
+		$match_ar = &$rounds[$round]['matches'][$match];
+		$times = $rounds[$round]['times'];
+
+		if( isset( $match_ar['report']['admin'] ) ){
+
+			$score = ['p1' => 0, 'p2' => 0];
+			for( $i = 1; $i <= $times; $i++ ){
+				if( $match_ar['report']['admin']['p1'][$i] > $match_ar['report']['admin']['p2'][$i] ) $score['p1']++;
+				elseif( $match_ar['report']['admin']['p1'][$i] < $match_ar['report']['admin']['p2'][$i] ) $score['p2']++;
+			}
+
+			$match_ar['report']['score'] = $score;
+			$match_ar['report']['visible'] = 1 == $times ? [ 'p1' => $match_ar['report']['admin']['p1'][1], 'p2' => $match_ar['report']['admin']['p2'][1] ] : $match_ar['report']['score'];
+			if( $score['p1'] > $score['p2'] ) $winner = $match_ar['p1'];
+
+		}
+		else {
+			if( $match_ar['p1'] && !$match_ar['p2'] ){
+				$winner = $match_ar['p1'];
+			}
+			elseif( !$match_ar['p1'] && $match_ar['p2'] ){
+				$winner = $match_ar['p2'];
+			}
+			else {
+				if( isset( $match_ar['report']['p1'] ) && !isset( $match_ar['report']['p2'] ) ){
+
+					$score = ['p1' => 0, 'p2' => 0];
+					for( $i = 1; $i <= $times; $i++ ){
+						if( $match_ar['report']['p1']['p1'][$i] > $match_ar['report']['p1']['p2'][$i] ) $score['p1']++;
+						elseif( $match_ar['report']['p1']['p1'][$i] < $match_ar['report']['p1']['p2'][$i] ) $score['p2']++;
+					}
+
+					$match_ar['report']['score'] = $score;
+					$match_ar['report']['visible'] = 1 == $times ? [ 'p1' => $match_ar['report']['p1']['p1'][1], 'p2' => $match_ar['report']['p1']['p2'][1] ] : $match_ar['report']['score'];
+					if( $score['p1'] > $score['p2'] ) $winner = $match_ar['p1'];
+				}
+				elseif( !isset( $match_ar['report']['p1'] ) && isset( $match_ar['report']['p2'] ) ){
+
+					$score = ['p1' => 0, 'p2' => 0];
+					for( $i = 1; $i <= $times; $i++ ){
+						if( $match_ar['report']['p2']['p1'][$i] > $match_ar['report']['p2']['p2'][$i] ) $score['p1']++;
+						elseif( $match_ar['report']['p2']['p1'][$i] < $match_ar['report']['p2']['p2'][$i] ) $score['p2']++;
+					}
+
+					$match_ar['report']['score'] = $score;
+					$match_ar['report']['visible'] = 1 == $times ? [ 'p1' => $match_ar['report']['p2']['p1'][1], 'p2' => $match_ar['report']['p2']['p2'][1] ] : $match_ar['report']['score'];
+					if( $score['p2'] > $score['p1'] ) $winner = $match_ar['p2'];
+				}
+				elseif( isset( $match_ar['report']['p1'] ) && isset( $match_ar['report']['p2'] ) ){
+					if( $match_ar['report']['p1'] != $match_ar['report']['p2'] ) {
+						$winner = null;
+					}
+					else {
+						$score = ['p1' => 0, 'p2' => 0];
+						for( $i = 1; $i <= $times; $i++ ){
+							if( $match_ar['report']['p1']['p1'][$i] > $match_ar['report']['p1']['p2'][$i] ) $score['p1']++;
+							elseif( $match_ar['report']['p1']['p1'][$i] < $match_ar['report']['p1']['p2'][$i] ) $score['p2']++;
+						}
+
+						$match_ar['report']['score'] = $score;
+						$match_ar['report']['visible'] = 1 == $times ? [ 'p1' => $match_ar['report']['p1']['p1'][1], 'p2' => $match_ar['report']['p1']['p2'][1] ] : $match_ar['report']['score'];
+						if( $score['p1'] > $score['p2'] ) $winner = $match_ar['p1'];
+					}
+				}
+			}
+		}
+
+		if( isset( $winner ) ){
+			$match_ar['winner'] = $winner;
+
+			if( $round != $count ){
+				// Not final round
+				$next_match_index = $match/2;
+				$next_match = &$rounds[$round+1]['matches'][floor( $next_match_index )];
+				
+				if( $next_match_index == floor( $next_match_index ) ) {
+					$next_match['p1'] = $winner;	
+				}
+				else {
+					$next_match['p2'] = $winner;
+				}
+			}
+
+			if( $count - 1 == $round ){
+				// Semi Final
+				if( $winner == $match_ar['p1'] ) $looser = $match_ar['p2'];
+				elseif( $winner == $match_ar['p2'] ) $looser = $match_ar['p1'];
+
+				$third_position_match = &$rounds[$round+1]['matches'][1];
+				
+				if( $match%2 == 0 ) {
+					$third_position_match['p1'] = $looser;	
+				}
+				else {
+					$third_position_match['p2'] = $looser;
+				}
+			}
+
+		}
 
 		update_post_meta( $tournament_id, '_tournament_setting_rounds', $rounds );
-		$this->ajax_response( __( 'Report saved.', 'gt' ), true );
+
 	}
 
 	/**
