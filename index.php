@@ -33,6 +33,7 @@ Class Gaming_Tournament {
 		add_action('wp_ajax_get-match-result-modal', [$this, 'match_result_modal_content']);
 		add_action('wp_ajax_update-match-result', [$this, 'update_match_result']);
 		add_action('save_post', [$this, 'update_tournament_meta']);
+		add_action('finish_round', [$this, 'process_round_result'], 10, 2);
 
 
 		add_filter('the_content', [$this, 'modify_tournament_page']);
@@ -370,9 +371,13 @@ Class Gaming_Tournament {
 
 			update_post_meta( $post_id, '_tournament_setting_rounds', $ts['rounds'] );
 		}
-		/**
-		 Update cron jobs
-		 */
+		
+		for( $i = 1; $i <= 6; $i++ ){
+			wp_clear_scheduled_hook( 'finish_round', [ $post_id, $i ] );
+
+			if( $i > $count ) continue;
+			wp_schedule_single_event( strtotime( $ts['rounds'][$i]['end_date'] ), 'finish_round', [ $post_id, $i ] );
+		}
 
 	}
 
