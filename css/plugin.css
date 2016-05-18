@@ -377,7 +377,7 @@ ul.ui-autocomplete.ui-menu {
 ------------------------------*/
 .winner_team {
   position: absolute;
-  top: 25px;
+  top: 0;
   text-align: center;
   right: 0;
   left: 0; }
