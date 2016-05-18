@@ -1,6 +1,6 @@
 (function($){
 	$(document).ready(function(){
-		if($('#username').length)
+		if($('#username').length && typeof gt_info != 'undefined')
 		$('#username').autocomplete({
 			source: gt_info.ajaxurl+'?action=autocomplete-username',
 			minLength: 2
