@@ -59,6 +59,10 @@ ul.ui-autocomplete.ui-menu {
   margin-bottom: 30px;
 }
 
+.jquery-modal.blocker {
+  z-index: 100;
+}
+
 /*brackets style
 ------------------------------*/
 .brackets_container * {
