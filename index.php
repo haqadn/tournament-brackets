@@ -632,7 +632,7 @@ Class Gaming_Tournament {
 		}
 		else {
 			$player_1 = false;
-			$p1_name = $t_info['current_round'] > $round ? _x( 'TBD', 'To be decided', 'gt' ) : '';
+			$p1_name = $t_info['current_round'] < $round ? _x( 'TBD', 'To be decided', 'gt' ) : '';
 			$p1_class = '';
 		}
 
@@ -662,7 +662,7 @@ Class Gaming_Tournament {
 		}
 		else {
 			$player_2 = false;
-			$p2_name = $t_info['current_round'] > $round ? _x( 'TBD', 'To be decided', 'gt' ) : '';
+			$p2_name = $t_info['current_round'] < $round ? _x( 'TBD', 'To be decided', 'gt' ) : '';
 			$p2_class = '';
 		}
 		?>
