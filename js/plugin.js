@@ -60,7 +60,9 @@
 					setTimeout(function(){
 						result.fadeOut();
 						result.text('');
-					}, 4000);
+						if( !gt_info.can_edit && data.success )
+							location.reload();
+					}, 3000);
 				},
 				'json'
 			);
