@@ -474,7 +474,7 @@ Class Gaming_Tournament {
 				<form id="tournament-registration-form" method="GET" action="<?php echo admin_url('admin-ajax.php'); ?>" style="display:none">
 					<p>
 						<label for="team-url"><?php _e( 'My Team URL', 'gt' ); ?></label>
-						<input type="text" name="team_url" id="team-url" />
+						<input type="url" name="team_url" id="team-url" placeholder="http://example.com" />
 					</p>
 					<?php if( current_user_can( 'edit_post', $post->ID ) ): ?>
 					<p>
