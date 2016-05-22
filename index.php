@@ -443,12 +443,11 @@ Class Gaming_Tournament {
 
 		$registration_deadline = $t_info['registration_deadline'];
 		$is_player = !isset( $t_info['registered_players'][get_current_user_id()] );
-		$admin_not_in_brackets_screen = !( 'brackets' == $_GET['screen'] && current_user_can( 'edit_post', $post->ID ) );
 		$can_edit = current_user_can( 'edit_post', $post->ID );
-		$logged_in = is_user_logged_in();
+		$admin_not_in_brackets_screen = !( 'brackets' == $_GET['screen'] && $can_edit );
 		$reg_open = ( time() < $t_info['registration_deadline'] && ( $can_edit || $t_info['public_registration'] ) );
 
-		if( ( ( $is_player && !$can_edit ) || !$logged_in || $admin_not_in_brackets_screen ) && $reg_open ){
+		if( ( ( !$is_player && !$can_edit ) || $admin_not_in_brackets_screen ) && $reg_open ){
 			?>
 			<div class="tournament-status">
 				
