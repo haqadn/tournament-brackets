@@ -339,11 +339,29 @@ Class Gaming_Tournament {
 
 				// Existing data
 				$tournament_registration = get_post_meta( $post->ID, '_tournament_setting_registration', true );
+				$tournament_region       = get_post_meta( $post->ID, '_tournament_setting_region', true );
 				$registration_deadline   = get_post_meta( $post->ID, '_tournament_setting_registration_deadline', true );
 				$rounds                  = (array) get_post_meta( $post->ID, '_tournament_setting_rounds', true );
 				?>
 				<table class="form-table">
 					<tbody>
+						<tr>
+							<th scope="row"><label><?php _e( 'Region', 'gt' ); ?></label></th>
+							<td>
+								<label>
+									<input type="radio" name="tournament_settings[region]" value="us" <?php echo 'us' == $tournament_region ? 'checked="checked"' : '';?>> 
+									<?php _e( 'United States', 'gt' ); ?>
+								</label> 
+								<label>
+									<input type="radio" name="tournament_settings[region]" value="others" <?php echo 'others' == $tournament_region ? 'checked="checked"' : '';?>> 
+									<?php _e( 'Others', 'gt' ); ?>
+								</label>
+								<label>
+									<input type="radio" name="tournament_settings[region]" value="all" <?php echo 'all' == $tournament_region ? 'checked="checked"' : '';?>> 
+									<?php _e( 'All', 'gt' ); ?>
+								</label>
+							</td>
+						</tr>
 						<tr>
 							<th scope="row"><label><?php _e( 'Tournament Registrations', 'gt' ); ?></label></th>
 							<td>
@@ -528,6 +546,8 @@ Class Gaming_Tournament {
 
 		if( in_array( $ts['registration'], ['public', 'private'] ) ) update_post_meta( $post_id, '_tournament_setting_registration', $ts['registration'] );
 
+		if( in_array( $ts['region'], ['us', 'others', 'all'] ) ) update_post_meta( $post_id, '_tournament_setting_region', $ts['region'] );
+
 		if( is_array( $ts['rounds'] ) ){
 			$count = 0;
 			foreach( $ts['rounds'] as $round ){
@@ -596,6 +616,7 @@ Class Gaming_Tournament {
 		$registration_count      = get_post_meta( $tournament_id, '_tournament_setting_registration_count', true );
 		$rounds                  = (array) get_post_meta( $tournament_id, '_tournament_setting_rounds', true );
 		$matches                 = (array) get_post_meta( $tournament_id, '_tournament_setting_matches', true );
+		$region                  = get_post_meta( $tournament_id, '_tournament_setting_region', true );
 
 		$current_round = $rounds['count'] + 1;
 		for( $l = 6 - $rounds['count'], $r = 1; $r <= $rounds['count']; $l++, $r++ ){
@@ -614,7 +635,8 @@ Class Gaming_Tournament {
 			'public_registration' => 'public' == $tournament_registration,
 			'current_round' => strtotime( $registration_deadline ) > time() ? 0 : $current_round,
 			'registration_count' => $registration_count,
-			'registered_players' => $registered_players
+			'registered_players' => $registered_players,
+			'region' => $region
 		];
 
 	}
