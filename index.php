@@ -11,6 +11,7 @@ Version: 1.0
 Author URI: http://eadnan.com/
 */
 
+
 /**
  * Plugin class to include all plugin code.
  */
@@ -41,7 +42,7 @@ Class Gaming_Tournament {
 		add_action('finish_round', [$this, 'process_round_result'], 10, 2);
 
 
-		add_filter('the_content', [$this, 'modify_tournament_page']);
+		add_filter('the_content', [$this, 'modify_tournament_page'], 100);
 		add_filter( 'no_texturize_shortcodes', [$this, 'exempt_wptexturize'] );
 
 		register_activation_hook(__FILE__, [$this, 'plugin_activated']);
