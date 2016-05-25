@@ -38,6 +38,34 @@ Class Gaming_Tournament {
 
 		add_filter('the_content', [$this, 'modify_tournament_page']);
 
+		register_activation_hook( __FILE__, [$this, 'plugin_activated'] );
+
+	}
+
+	/**
+	 * Handle plugin installation.
+	 *
+	 * Prepare database for the plugin on activation.
+	 */
+	public function plugin_activated(){
+		global $wpdb;
+		$charset_collate = $wpdb->get_charset_collate();
+
+		$sql = "CREATE TABLE IF NOT EXISTS `{$wpdb->prefix}tournament_leaderboard` (
+		  `ID` int(11) unsigned NOT NULL AUTO_INCREMENT,
+		  `player` int(11) DEFAULT NULL,
+		  `tournament` int(11) DEFAULT NULL,
+		  `round` int(11) DEFAULT NULL,
+		  `match` int(11) DEFAULT NULL,
+		  `point` double DEFAULT NULL,
+		  `timestamp` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+		  PRIMARY KEY (`ID`)
+		) $charset_collate;";
+
+		
+		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+		dbDelta( $sql );
+
 	}
 
 	/**
@@ -942,6 +970,19 @@ Class Gaming_Tournament {
 			}
 		}
 
+		// Remove any previous point for this match
+		global $wpdb;
+		$wpdb->delete( $wpdb->prefix.'tournament_leaderboard', [
+				'tournament' => $tournament_id,
+				'round'      => $round,
+				'match'      => $match
+			],
+			[
+				'%d',
+				'%d',
+				'%d'
+			] );
+
 		if( isset( $winner ) ){
 			$match_ar['winner'] = $winner;
 
@@ -971,6 +1012,18 @@ Class Gaming_Tournament {
 				else {
 					$third_position_match['p2'] = $looser;
 				}
+			}
+
+			if( null != $winner ){
+				// Give points to the winner
+				$wpdb->insert( $wpdb->prefix.'tournament_leaderboard', [
+					'player'     => $winner,
+					'tournament' => $tournament_id,
+					'round'      => $round,
+					'match'      => $match,
+					'point'      => $rounds[$round]['points'],
+					'timestamp'  => current_time( 'mysql' )
+					] );
 			}
 
 		}
