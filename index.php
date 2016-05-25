@@ -15,6 +15,11 @@ Author URI: http://eadnan.com/
  * Plugin class to include all plugin code.
  */
 Class Gaming_Tournament {
+
+	/**
+	 * Used to store temporary data for each leaderboard column.
+	 */
+	private $leaderboard_row = false;
 	
 	/**
 	 * Run plugin initialization codes.
@@ -37,9 +42,167 @@ Class Gaming_Tournament {
 
 
 		add_filter('the_content', [$this, 'modify_tournament_page']);
+		add_filter( 'no_texturize_shortcodes', [$this, 'exempt_wptexturize'] );
 
-		register_activation_hook( __FILE__, [$this, 'plugin_activated'] );
+		register_activation_hook(__FILE__, [$this, 'plugin_activated']);
 
+		add_shortcode('leaderboard', [$this, 'repeated_leaderboard_shortcode']);
+
+
+		// Deal with the annoying wpautop on shortcode
+		remove_filter( 'the_content', 'wpautop' );
+		add_filter( 'the_content', 'wpautop' , 99);
+		add_filter( 'the_content', 'shortcode_unautop',100 );
+
+	}
+
+	/**
+	 * Shortcode output for leaderboard
+	 */
+	public function repeated_leaderboard_shortcode( $atts, $content ){
+		global $wpdb;
+
+		extract( shortcode_atts( [
+		    'game'       => false,
+		    'platform'   => false,
+		    'start_time' => false,
+		    'end_time'   => false
+		], $atts ) );
+
+		// In case there is no condition, we don't want a sql syntax error
+		$conditions = ["1"];
+
+		if( $game )
+			$conditions[] = $wpdb->prepare( "`game`=%d", $game );
+		if( $platform )
+			$conditions[] = $wpdb->prepare( "`platform`=%d", $platform );
+		if( $start_time )
+			$conditions[] = $wpdb->prepare( "`timestamp`>=%s", date("Y-m-d H:i:s", strtotime( $start_time ) ) );
+		if( $end_time )
+			$conditions[] = $wpdb->prepare( "`timestamp`<=%s", date("Y-m-d H:i:s", strtotime( $end_time ) ) );
+
+		$conditions = implode( " AND ", $conditions );
+
+		$rows = $wpdb->get_results( "SELECT `player`, SUM(`point`) as total_points, COUNT(DISTINCT `tournament`, `round`) as matches_played, COUNT(DISTINCT `tournament`) as tournaments_played
+			FROM {$wpdb->prefix}tournament_leaderboard
+			WHERE $conditions
+			GROUP BY `player`
+			ORDER BY total_points DESC;" );
+
+		ob_start();
+		?>
+		<table class="table table-striped leaderboard">
+			<?php add_shortcode('col', [$this, 'leaderboard_column_names']); ?>
+			<thead>
+				<tr><?php echo do_shortcode(trim($content)); ?></tr>
+			</thead>
+			<?php remove_shortcode('col'); ?>
+			<?php add_shortcode('col', [$this, 'leaderboard_column_values']); ?>
+			<tbody>
+				<?php
+				$rank = 0; $prev_points = 0;
+				foreach ($rows as $row){
+					$row->userdata = get_userdata( $row->player );
+					$row->rank = $prev_points != $row->total_points ? ++$rank : $rank;
+					$this->leaderboard_row = $row;
+					$prev_points = $row->total_points;
+
+					echo "<tr>".do_shortcode(trim($content))."</tr>";
+				}
+				?>
+			</tbody>
+			<?php remove_shortcode('col'); ?>
+		</table>
+		<?php
+		return ob_get_clean();
+	}
+
+	/**
+	 * Prevent wptexturize from messing up the column shortcode tags.
+	 */
+	public function exempt_wptexturize( $shortcodes ){
+		$shortcodes[] = 'leaderboard';
+
+		return $shortcodes;
+	}
+
+	/**
+	 * Shortcode that is used to output each of the leaderboard column values.
+	 */
+	public function leaderboard_column_values( $atts ){
+		extract( shortcode_atts( [
+			'field' => false
+			], $atts ) );
+
+		// return print_r( $this->leaderboard_row, 1 );
+
+		if( !$field ) return '';
+
+		switch ( $field ) {
+			case 'rank':
+				return "<td>".$this->leaderboard_row->rank."</td>";
+				break;
+			case 'name':
+				return "<td>".$this->leaderboard_row->userdata->data->display_name."</td>";
+				break;
+			case 'id':
+				return "<td>".$this->leaderboard_row->userdata->ID."</td>";
+				break;
+			case 'points':
+				return "<td>".$this->leaderboard_row->total_points."</td>";
+				break;
+			case 'matches':
+				return "<td>".$this->leaderboard_row->matches_played."</td>";
+				break;
+			case 'tournaments':
+				return "<td>".$this->leaderboard_row->tournaments_played."</td>";
+				break;
+			case 'username':
+			case 'userlogin':
+			case 'gamertag':
+				return "<td>".$this->leaderboard_row->userdata->data->user_login."</td>";
+				break;
+		}
+	}
+
+	/**
+	 * Shortcode that is used to output each of the leaderboard column names.
+	 */
+	public function leaderboard_column_names( $atts ){
+		extract( shortcode_atts( [
+			'field' => false,
+			'label' => false
+			], $atts ) );
+
+		if( !$field ) return '';
+		if( $label ) return "<th>$label</th>";
+
+		// If a level is not provided, try to get it from the field name.
+		switch ( $field ) {
+			case 'rank':
+				return "<th>".__( "Rank", 'gt' )."</th>";
+				break;
+			case 'name':
+				return "<th>".__( "Name", 'gt' )."</th>";
+				break;
+			case 'id':
+				return "<th>".__( "ID", 'gt' )."</th>";
+				break;
+			case 'points':
+				return "<th>".__( "Points", 'gt' )."</th>";
+				break;
+			case 'matches':
+				return "<th>".__( "Matches Played", 'gt' )."</th>";
+				break;
+			case 'tournaments':
+				return "<th>".__( "Tournaments Participated", 'gt' )."</th>";
+				break;
+			case 'username':
+			case 'userlogin':
+			case 'gamertag':
+				return "<th>".__( "Gamer Tag", 'gt' )."</th>";
+				break;
+		}
 	}
 
 	/**
@@ -52,14 +215,16 @@ Class Gaming_Tournament {
 		$charset_collate = $wpdb->get_charset_collate();
 
 		$sql = "CREATE TABLE IF NOT EXISTS `{$wpdb->prefix}tournament_leaderboard` (
-		  `ID` int(11) unsigned NOT NULL AUTO_INCREMENT,
-		  `player` int(11) DEFAULT NULL,
-		  `tournament` int(11) DEFAULT NULL,
-		  `round` int(11) DEFAULT NULL,
-		  `match` int(11) DEFAULT NULL,
-		  `point` double DEFAULT NULL,
-		  `timestamp` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-		  PRIMARY KEY (`ID`)
+			`ID` int(11) unsigned NOT NULL AUTO_INCREMENT,
+			`player` int(11) DEFAULT NULL,
+			`tournament` int(11) DEFAULT NULL,
+			`round` int(11) DEFAULT NULL,
+			`match` int(11) DEFAULT NULL,
+			`game` int(11) DEFAULT NULL,
+			`platform` int(11) DEFAULT NULL,
+			`point` double DEFAULT NULL,
+			`timestamp` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+			PRIMARY KEY (`ID`)
 		) $charset_collate;";
 
 		
@@ -985,6 +1150,8 @@ Class Gaming_Tournament {
 
 		if( isset( $winner ) ){
 			$match_ar['winner'] = $winner;
+			if( $winner == $match_ar['p1'] && $match_ar['p1'] ) $looser = $match_ar['p2'];
+			elseif( $winner == $match_ar['p2'] && $match_ar['p2'] ) $looser = $match_ar['p1'];
 
 			if( $round != $count ){
 				// Not final round
@@ -1001,8 +1168,6 @@ Class Gaming_Tournament {
 
 			if( $count - 1 == $round ){
 				// Semi Final
-				if( $winner == $match_ar['p1'] ) $looser = $match_ar['p2'];
-				elseif( $winner == $match_ar['p2'] ) $looser = $match_ar['p1'];
 
 				$third_position_match = &$rounds[$round+1]['matches'][1];
 				
@@ -1014,14 +1179,44 @@ Class Gaming_Tournament {
 				}
 			}
 
+
+			$games = wp_get_post_terms( $tournament_id, 'game', ['fields' => 'ids'] );
+			$platforms = wp_get_post_terms( $tournament_id, 'platform', ['fields' => 'ids'] );
+
+			if( !empty( $games ) )
+				$game = $games[0];
+			else
+				$game = 0;
+
+			if( !empty( $platforms ) )
+				$platform = $platforms[0];
+			else
+				$platform = 0;
+
 			if( null != $winner ){
+
 				// Give points to the winner
 				$wpdb->insert( $wpdb->prefix.'tournament_leaderboard', [
 					'player'     => $winner,
 					'tournament' => $tournament_id,
 					'round'      => $round,
 					'match'      => $match,
+					'game'       => $game,
+					'platform'   => $platform,
 					'point'      => $rounds[$round]['points'],
+					'timestamp'  => current_time( 'mysql' )
+					] );
+			}
+			if( isset( $looser ) ){
+				// Keep and entry for the looser as well just for the records
+				$wpdb->insert( $wpdb->prefix.'tournament_leaderboard', [
+					'player'     => $looser,
+					'tournament' => $tournament_id,
+					'round'      => $round,
+					'match'      => $match,
+					'game'       => $game,
+					'platform'   => $platform,
+					'point'      => 0,
 					'timestamp'  => current_time( 'mysql' )
 					] );
 			}
