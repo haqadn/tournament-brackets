@@ -40,6 +40,7 @@ Class Gaming_Tournament {
 		add_action('wp_ajax_update-match-result', [$this, 'update_match_result']);
 		add_action('save_post', [$this, 'update_tournament_meta']);
 		add_action('finish_round', [$this, 'process_round_result'], 10, 2);
+		add_action('pre_get_posts', [$this, 'regionaly_restrict_tournament_view']);
 
 
 		add_filter('the_content', [$this, 'modify_tournament_page'], 100);
@@ -1316,6 +1317,50 @@ Class Gaming_Tournament {
 		</form>
 		<?php
 		exit;
+	}
+
+	/**
+	 * Filter tournaments on archive pages based on which region it is being viewed through
+	 */
+	public function regionaly_restrict_tournament_view( $query ){
+		if( get_query_var( 'post_type' ) != 'tournament' ) return;
+		if( current_user_can( 'edit_others_posts') ) return;
+		include_once("geoip.inc");
+
+
+		$gi = geoip_open(__DIR__."/GeoIP.dat", GEOIP_STANDARD);
+		$is_us = geoip_country_code_by_addr($gi, $this->get_the_user_ip()) == 'US';
+
+		if( $is_us ){
+			$exclude_location = 'others';
+		}
+		else {
+			$exclude_location = 'us';
+		}
+
+		$query->set('meta_query', [
+			[
+				'key'     => '_tournament_setting_region',
+				'value'   => $exclude_location,
+				'compare' => '!='
+			]]);
+		PC::debug( $query );
+	}
+
+	/**
+	 * Retuns current user ip.
+	 */
+	function get_the_user_ip() {
+		if ( !empty( $_SERVER['HTTP_CLIENT_IP'] ) ) {
+			//check ip from share internet
+			$ip = $_SERVER['HTTP_CLIENT_IP'];
+		} elseif ( !empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
+			//to check ip is pass from proxy
+			$ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+		} else {
+			$ip = $_SERVER['REMOTE_ADDR'];
+		}
+		return $ip;
 	}
 }
 new Gaming_Tournament;
