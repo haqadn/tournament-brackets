@@ -870,6 +870,7 @@ Class Gaming_Tournament {
 		$match_ar = &$rounds[$round]['matches'][$match];
 		$times = $rounds[$round]['times'];
 
+		// If admin has set any report, that is final.
 		if( isset( $match_ar['report']['admin'] ) ){
 
 			$score = ['p1' => 0, 'p2' => 0];
@@ -880,10 +881,13 @@ Class Gaming_Tournament {
 
 			$match_ar['report']['score'] = $score;
 			$match_ar['report']['visible'] = 1 == $times ? [ 'p1' => $match_ar['report']['admin']['p1'][1], 'p2' => $match_ar['report']['admin']['p2'][1] ] : $match_ar['report']['score'];
+			
 			if( $score['p1'] > $score['p2'] ) $winner = $match_ar['p1'];
+			else if( $score['p2'] > $score['p1'] ) $winner = $match_ar['p2'];
 
 		}
 		else {
+			// If a player is matched against an empty space.
 			if( $match_ar['p1'] && !$match_ar['p2'] ){
 				$winner = $match_ar['p1'];
 			}
@@ -891,6 +895,7 @@ Class Gaming_Tournament {
 				$winner = $match_ar['p2'];
 			}
 			else {
+				// Player 1 reported and player 2 did not.
 				if( isset( $match_ar['report']['p1'] ) && !isset( $match_ar['report']['p2'] ) ){
 
 					$score = ['p1' => 0, 'p2' => 0];
@@ -903,6 +908,7 @@ Class Gaming_Tournament {
 					$match_ar['report']['visible'] = 1 == $times ? [ 'p1' => $match_ar['report']['p1']['p1'][1], 'p2' => $match_ar['report']['p1']['p2'][1] ] : $match_ar['report']['score'];
 					if( $score['p1'] > $score['p2'] ) $winner = $match_ar['p1'];
 				}
+				// Player 2 reported and player 1 did not.
 				elseif( !isset( $match_ar['report']['p1'] ) && isset( $match_ar['report']['p2'] ) ){
 
 					$score = ['p1' => 0, 'p2' => 0];
@@ -915,6 +921,7 @@ Class Gaming_Tournament {
 					$match_ar['report']['visible'] = 1 == $times ? [ 'p1' => $match_ar['report']['p2']['p1'][1], 'p2' => $match_ar['report']['p2']['p2'][1] ] : $match_ar['report']['score'];
 					if( $score['p2'] > $score['p1'] ) $winner = $match_ar['p2'];
 				}
+				// Both players reported.
 				elseif( isset( $match_ar['report']['p1'] ) && isset( $match_ar['report']['p2'] ) ){
 					if( $match_ar['report']['p1'] != $match_ar['report']['p2'] ) {
 						$winner = null;
@@ -929,6 +936,7 @@ Class Gaming_Tournament {
 						$match_ar['report']['score'] = $score;
 						$match_ar['report']['visible'] = 1 == $times ? [ 'p1' => $match_ar['report']['p1']['p1'][1], 'p2' => $match_ar['report']['p1']['p2'][1] ] : $match_ar['report']['score'];
 						if( $score['p1'] > $score['p2'] ) $winner = $match_ar['p1'];
+						else if( $score['p2'] > $score['p1'] ) $winner = $match_ar['p2'];
 					}
 				}
 			}
