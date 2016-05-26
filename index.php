@@ -1344,7 +1344,6 @@ Class Gaming_Tournament {
 				'value'   => $exclude_location,
 				'compare' => '!='
 			]]);
-		PC::debug( $query );
 	}
 
 	/**
