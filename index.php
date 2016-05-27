@@ -689,11 +689,59 @@ Class Gaming_Tournament {
 
 				<br>
 
-				<?php if ( $reg_open ): ?>
+				<?php if( $reg_open ): ?>
 					<strong><?php _e( 'Number of Registrations:', 'gt' ); ?></strong>
 					<?php echo $t_info['registration_count']; ?>
 				<?php endif ?>
+
 			</p>
+			<?php
+			if( $t_info['current_round'] > $t_info['round']['count'] ){
+				$final_round = $t_info['rounds'][$t_info['rounds']['count']]['matches'];
+				$champion = $final_round[0]['winner'];
+				if( $final_round[0]['p1'] == $champion )
+					$runner_up = $final_round[0]['p2'];
+				else
+					$runner_up = $final_round[0]['p1'];
+
+				$second_runner_up = $final_round[1]['winner'];
+				$champion = get_userdata( $champion );
+				$runner_up = get_userdata( $runner_up );
+				$second_runner_up = get_userdata( $second_runner_up );
+
+				?>
+				<h2><?php _e( 'Results', 'gt' ); ?></h2>
+				<p>
+					<?php if( $champion ){ ?>
+						<strong><?php _e( 'Champion:', 'gt' ); ?></strong>
+						<?php
+						echo "<span class='tournament-champion'>";
+						echo $champion->data->user_login;
+						echo "</span>";
+						?>
+					<?php } ?>
+					<br>
+					<?php if( $runner_up ){ ?>
+						<strong><?php _e( 'Runner Up:', 'gt' ); ?></strong>
+						<?php
+						echo "<span class='tournament-runner_up'>";
+						echo $runner_up->data->user_login;
+						echo "</span>";
+						?>
+					<?php } ?>
+					<br>
+					<?php if( $second_runner_up ){ ?>
+						<strong><?php _e( 'Champion:', 'gt' ); ?></strong>
+						<?php
+						echo "<span class='tournament-second_runner_up'>";
+						echo $second_runner_up->data->user_login;
+						echo "</span>";
+						?>
+					<?php } ?>
+				</p>
+				<?php
+			}
+			?>
 
 			<?php
 			return;
