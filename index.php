@@ -671,17 +671,17 @@ Class Gaming_Tournament {
 				<strong><?php _e( 'Tournament Status:', 'gt' ); ?></strong>
 				<?php 
 					if( $reg_open ) {
-						echo "<span class='tournament-status tournament-registering'>";
+						echo "<span class='tournament-status-text tournament-registering'>";
 						_e( 'Open for registration', 'gt' );
 						echo "</span>";
 					}
 					elseif( $t_info['current_round'] <= $t_info['rounds']['count'] || -1 == $t_info['current_round'] ) {
-						echo "<span class='tournament-status tournament-running'>";
+						echo "<span class='tournament-status-text tournament-running'>";
 						_e( 'Running', 'gt' );
 						echo "</span>";
 					}
 					else {
-						echo "<span class='tournament-status tournament-finished'>";
+						echo "<span class='tournament-status-text tournament-finished'>";
 						_e( 'Finished', 'gt' );
 						echo "</span>";
 					}

@@ -63,6 +63,10 @@ ul.ui-autocomplete.ui-menu {
   z-index: 100;
 }
 
+.tournament-status-text.tournament-registering { color: #6B9362; }
+.tournament-status-text.tournament-running { color: #E2B13C; }
+.tournament-status-text.tournament-finished { color: #DC3023; }
+
 /*brackets style
 ------------------------------*/
 .brackets_container * {
