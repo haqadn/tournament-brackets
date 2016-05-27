@@ -667,24 +667,33 @@ Class Gaming_Tournament {
 		if( !is_single() ){
 			?>
 			
-			<strong><?php _e( 'Tournament Status:', 'gt' ); ?></strong>
-			<?php 
-				if( $reg_open ) {
-					echo "<span class='tournament-status tournament-registering'>";
-					_e( 'Open for registration', 'gt' );
-					echo "</span>";
-				}
-				elseif( $t_info['current_round'] <= $t_info['rounds']['count'] || -1 == $t_info['current_round'] ) {
-					echo "<span class='tournament-status tournament-running'>";
-					_e( 'Running', 'gt' );
-					echo "</span>";
-				}
-				else {
-					echo "<span class='tournament-status tournament-finished'>";
-					_e( 'Finished', 'gt' );
-					echo "</span>";
-				}
-			 ?>
+			<p>
+				<strong><?php _e( 'Tournament Status:', 'gt' ); ?></strong>
+				<?php 
+					if( $reg_open ) {
+						echo "<span class='tournament-status tournament-registering'>";
+						_e( 'Open for registration', 'gt' );
+						echo "</span>";
+					}
+					elseif( $t_info['current_round'] <= $t_info['rounds']['count'] || -1 == $t_info['current_round'] ) {
+						echo "<span class='tournament-status tournament-running'>";
+						_e( 'Running', 'gt' );
+						echo "</span>";
+					}
+					else {
+						echo "<span class='tournament-status tournament-finished'>";
+						_e( 'Finished', 'gt' );
+						echo "</span>";
+					}
+				?>
+
+				<br>
+
+				<?php if ( $reg_open ): ?>
+					<strong><?php _e( 'Number of Registrations:', 'gt' ); ?></strong>
+					<?php echo $t_info['registration_count']; ?>
+				<?php endif ?>
+			</p>
 
 			<?php
 			return;
