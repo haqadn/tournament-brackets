@@ -664,6 +664,32 @@ Class Gaming_Tournament {
 		$in_brackets_screen = 'brackets' == $_GET['screen'];
 		$reg_open = ( time() < $t_info['registration_deadline'] && ( $can_edit || $t_info['public_registration'] ) );
 
+		if( !is_single() ){
+			?>
+			
+			<strong><?php _e( 'Tournament Status:', 'gt' ); ?></strong>
+			<?php 
+				if( $reg_open ) {
+					echo "<span class='tournament-status tournament-registering'>";
+					_e( 'Open for registration', 'gt' );
+					echo "</span>";
+				}
+				elseif( $t_info['current_round'] <= $t_info['rounds']['count'] || -1 == $t_info['current_round'] ) {
+					echo "<span class='tournament-status tournament-running'>";
+					_e( 'Running', 'gt' );
+					echo "</span>";
+				}
+				else {
+					echo "<span class='tournament-status tournament-finished'>";
+					_e( 'Finished', 'gt' );
+					echo "</span>";
+				}
+			 ?>
+
+			<?php
+			return;
+		}
+
 		if( !$can_edit && !$is_player && !( $can_edit && $in_brackets_screen ) && $reg_open ){
 			?>
 			<div class="tournament-status">
