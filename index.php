@@ -801,6 +801,22 @@ Class Gaming_Tournament {
 			<?php
 		}
 		else {
+			if( $t_info['current_round'] <= $t_info['rounds']['count'] && $t_info ){
+				if( $t_info['current_round'] == 0 ){
+					$timeup = $t_info['rounds'][1]['end_date'];
+					$round_name = $t_info['rounds'][1]['label'];
+				}
+				else {
+					$timeup = $t_info['rounds'][$t_info['current_round']]['end_date'];
+					$round_name = $t_info['rounds'][$t_info['current_round']]['label'];
+				}
+				?>
+
+					<p class="text-center"><?php printf( _x( '%s ends in:', 'round name ends in', 'gt' ), $round_name ); ?></p>
+					<p class="countdown text-center" data-end-time="<?php echo date( 'Y-m-d H:i:s O', $timeup ); ?>"></p>
+
+				<?php
+			}
 			self::show_brackets( $post->ID );
 		}
 		?>
