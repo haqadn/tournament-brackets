@@ -1316,7 +1316,7 @@ Class Gaming_Tournament {
 			else
 				$platform = 0;
 
-			if( null != $winner ){
+			if( null != $winner && $winner ){
 
 				// Give points to the winner
 				$wpdb->insert( $wpdb->prefix.'tournament_leaderboard', [
@@ -1330,7 +1330,7 @@ Class Gaming_Tournament {
 					'timestamp'  => current_time( 'mysql' )
 					] );
 			}
-			if( isset( $looser ) ){
+			if( isset( $looser ) && $looser ){
 				// Keep and entry for the looser as well just for the records
 				$wpdb->insert( $wpdb->prefix.'tournament_leaderboard', [
 					'player'     => $looser,
