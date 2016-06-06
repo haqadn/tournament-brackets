@@ -1137,9 +1137,11 @@ Class Gaming_Tournament {
 				else if( $match_result['p1'][$i] < $match_result['p2'][$i] )
 					$score['p2']++;
 			}
-			elseif( $match_result['p1'][$i] == $match_result['p2'][$i] ) {
-				$this->ajax_response( __( 'Match result cannot be a tie.', 'gt' ) );
-			}
+		}
+
+
+		if( $score['p1'] == $score['p2'] ) {
+			$this->ajax_response( __( 'There must be a winner.', 'gt' ) );
 		}
 
 		$rounds[$round]['matches'][$match_index]['report'][$p] = $match_result;
