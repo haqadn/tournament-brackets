@@ -731,7 +731,7 @@ Class Gaming_Tournament {
 					<?php } ?>
 					<br>
 					<?php if( $second_runner_up ){ ?>
-						<strong><?php _e( 'Champion:', 'gt' ); ?></strong>
+						<strong><?php _e( 'Second Runner Up:', 'gt' ); ?></strong>
 						<?php
 						echo "<span class='tournament-second_runner_up'>";
 						echo $second_runner_up->data->user_login;
