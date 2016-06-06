@@ -635,12 +635,31 @@ Class Gaming_Tournament {
 			'rounds' => $rounds,
 			'registration_deadline' => strtotime( $registration_deadline ),
 			'public_registration' => 'public' == $tournament_registration,
-			'current_round' => strtotime( $registration_deadline ) > time() ? 0 : $current_round,
+			'current_round' => self::get_current_round( $rounds ),
 			'registration_count' => $registration_count,
 			'registered_players' => $registered_players,
 			'region' => $region
 		];
 
+	}
+
+	/**
+	 * Get the currently ongoing round for this tournament.
+	 *
+	 * @var mixed[] $rounds Array containing the round information.
+	 */
+	public static function get_current_round( $rounds ){
+
+		for( $l = 6 - $rounds['count'], $r = 1; $r <= $rounds['count']; $l++, $r++ ){
+			$rounds[$r]['end_date'] = strtotime( $rounds[$r]['end_date'] );
+
+			if( $current_round != $rounds['count'] + 1 ) continue;
+
+			if( $rounds[$r]['end_date'] > time() )
+				$current_round = $r;
+
+			return strtotime( $registration_deadline ) > time() ? 0 : $current_round;
+		}
 	}
 
 	/**
@@ -1127,6 +1146,9 @@ Class Gaming_Tournament {
 		
 		if( isset( $match['report']['admin'] ) && !current_user_can( 'edit_post', $tournament_id ) )
 			$this->ajax_response( __( 'Match report fixed by admin.', 'gt' ) );
+
+		if( $this->get_current_round( $rounds ) > $round && !current_user_can( 'edit_post', $tournament_id ) )
+			$this->ajax_response( __( 'Past round results cannot be changed.', 'gt' ) );
 
 		$score = ['p1' => 0, 'p2' => 0];
 		for( $i = 1; $i <= $times; $i++ ){

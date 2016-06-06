@@ -83,7 +83,7 @@
 			if( !gt_info.can_edit ){
 
 				
-				if( round_col.attr('data-round') != gt_info.tournament_info.current_round ) return;
+				if( round_col.attr('data-round') < gt_info.tournament_info.current_round ) return;
 				
 				user_included = false;
 				$(this).find('.m_segment').each(function(){
