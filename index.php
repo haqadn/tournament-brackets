@@ -1151,9 +1151,7 @@ Class Gaming_Tournament {
 
 		update_post_meta( $tournament_id, '_tournament_setting_rounds', $rounds );
 
-		if( current_user_can( 'edit_post', $tournament_id ) ){
-			$this->process_match_result( $tournament_id, $round, $match_index );
-		}
+		$this->process_match_result( $tournament_id, $round, $match_index );
 
 		$this->ajax_response( __( 'Report saved.', 'gt' ), true );
 	}
@@ -1225,6 +1223,7 @@ Class Gaming_Tournament {
 					$match_ar['report']['score'] = $score;
 					$match_ar['report']['visible'] = 1 == $times ? [ 'p1' => $match_ar['report']['p1']['p1'][1], 'p2' => $match_ar['report']['p1']['p2'][1] ] : $match_ar['report']['score'];
 					if( $score['p1'] > $score['p2'] ) $winner = $match_ar['p1'];
+					else $winner = null;
 				}
 				// Player 2 reported and player 1 did not.
 				elseif( !isset( $match_ar['report']['p1'] ) && isset( $match_ar['report']['p2'] ) ){
@@ -1238,6 +1237,7 @@ Class Gaming_Tournament {
 					$match_ar['report']['score'] = $score;
 					$match_ar['report']['visible'] = 1 == $times ? [ 'p1' => $match_ar['report']['p2']['p1'][1], 'p2' => $match_ar['report']['p2']['p2'][1] ] : $match_ar['report']['score'];
 					if( $score['p2'] > $score['p1'] ) $winner = $match_ar['p2'];
+					else $winner = null;
 				}
 				// Both players reported.
 				elseif( isset( $match_ar['report']['p1'] ) && isset( $match_ar['report']['p2'] ) ){
