@@ -620,15 +620,9 @@ Class Gaming_Tournament {
 		$matches                 = (array) get_post_meta( $tournament_id, '_tournament_setting_matches', true );
 		$region                  = get_post_meta( $tournament_id, '_tournament_setting_region', true );
 
-		$current_round = $rounds['count'] + 1;
 		for( $l = 6 - $rounds['count'], $r = 1; $r <= $rounds['count']; $l++, $r++ ){
 			$rounds[$r]['label'] = 1 === $r ? $round_labels[0] : $round_labels[$l];
 			$rounds[$r]['end_date'] = strtotime( $rounds[$r]['end_date'] );
-
-			if( $current_round != $rounds['count'] + 1 ) continue;
-
-			if( $rounds[$r]['end_date'] > time() )
-				$current_round = $r;
 		}
 
 		return [
@@ -650,16 +644,15 @@ Class Gaming_Tournament {
 	 */
 	public static function get_current_round( $rounds ){
 
+		$current_round = $rounds['count'] + 1;
 		for( $l = 6 - $rounds['count'], $r = 1; $r <= $rounds['count']; $l++, $r++ ){
-			$rounds[$r]['end_date'] = strtotime( $rounds[$r]['end_date'] );
-
 			if( $current_round != $rounds['count'] + 1 ) continue;
 
 			if( $rounds[$r]['end_date'] > time() )
 				$current_round = $r;
-
-			return strtotime( $registration_deadline ) > time() ? 0 : $current_round;
 		}
+		
+		return strtotime( $registration_deadline ) > time() ? 0 : $current_round;
 	}
 
 	/**
