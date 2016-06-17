@@ -1012,10 +1012,10 @@ Class Gaming_Tournament {
 						<strong><?php echo $p2_goals; ?></strong>
 					</span>
 				</div>
-				<!-- <div class="m_dtls">
-					Match date and time
-					<span></span>
-				</div> -->
+				<div class="m_dtls">
+					<!-- Link to update match score -->
+					<span><a href="#" class="update-score">Update Score</a></span>
+				</div>
 			</div>
 		</div>
 		<?php

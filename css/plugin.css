@@ -330,8 +330,9 @@ ul.ui-autocomplete.ui-menu {
   top: 50%;
   transform: translateY(-50%);
   color: #777;
-  display: block;
-  visibility: hidden;
+  display: none;
+  /*display: block;*/
+  /*visibility: hidden;*/
   width: 93%;
   text-align: center; }
 

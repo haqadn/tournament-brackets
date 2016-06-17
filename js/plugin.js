@@ -68,7 +68,7 @@
 			);
 		});
 
-		$('.match_unit').click(function(){
+		$('.match_unit').each(function(){
 			var round_col = $(this).parents('.round_column');
 
 			var flag = false;
@@ -76,6 +76,7 @@
 				if( typeof $(this).attr('data-team-id') == 'undefined' )
 					flag = true;
 			});
+
 
 			if(flag) return;
 
@@ -94,11 +95,44 @@
 			}
 
 
+			$(this).find('.m_dtls span').show();
+		})
+
+		$('.update-score').click(function(e){
+
+			e.preventDefault();
+
+			var round_col = $(this).parents('.round_column');
+
+			var flag = false;
+			$(this).parents('.match_unit').find('.m_segment').each(function(){
+				if( typeof $(this).parents('.match_unit').find('.m_segment').attr('data-team-id') == 'undefined' )
+					flag = true;
+			});
+
+
+			if(flag) return;
+
+
+			if( !gt_info.can_edit ){
+
+				
+				if( round_col.attr('data-round') < gt_info.tournament_info.current_round ) return;
+				
+				user_included = false;
+				$(this).parents('.match_unit').find('.m_segment').each(function(){
+					if($(this).parents('.match_unit').attr('data-team-id') == gt_info.current_user) user_included = true;
+				});
+
+				if( !user_included ) return;
+			}
+
+
 			$.get( 
 				gt_info.ajaxurl, 
 				{
 					tournament_id: gt_info.tournament_id,
-					match_index: $(this).parent().attr('data-match-index'),
+					match_index: $(this).parents('.match_unit').parent().attr('data-match-index'),
 					round: round_col.attr('data-round'),
 					action: 'get-match-result-modal'
 				},
